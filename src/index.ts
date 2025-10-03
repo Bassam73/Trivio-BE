@@ -7,8 +7,8 @@ import bootstrap from "./modules/index.router";
 const app = express();
 env.config();
 dbConnection();
-bootstrap(app);
 app.use(express.json());
+bootstrap(app);
 app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
   err.statusCode = err.statusCode || 500;
   err.message = err.message || "Internal Server Error";
@@ -17,8 +17,6 @@ app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
     stack: err.stack,
   });
 });
-
-
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
