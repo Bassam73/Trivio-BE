@@ -6,6 +6,9 @@ export interface IUser extends Document {
   password?: string;
   code?: number;
   codeCreatedAt?: Date;
+  isVerfied: boolean;
+  OTP?: number;
+  OTPCreatedAt?: Date;
 }
 
 export interface signupDTO {
@@ -15,4 +18,16 @@ export interface signupDTO {
   confirm_password: string;
   code?: number;
   codeCreatedAt?: Date;
+  isVerfied?: boolean;
+}
+
+export interface loginDTO {
+  username?: string;
+  email?: string;
+  password: string;
+}
+
+export interface verifyAccountDTO {
+  email: string;
+  code: string;
 }

@@ -11,4 +11,16 @@ const signUpVal = Joi.object({
     .required(),
 });
 
-export { signUpVal };
+const loginVal = Joi.object({
+  username: Joi.string().min(3).max(20),
+  email: Joi.string().email(),
+  password: Joi.string()
+    .regex(/^(?=.*[A-Za-z])(?=.*\d).{8,}$/)
+    .required(),
+});
+
+const verifyUserVal = Joi.object({
+  email: Joi.string().email().required(),
+  code: Joi.string().min(6).max(6).required(),
+});
+export { signUpVal, loginVal, verifyUserVal };

@@ -1,7 +1,7 @@
 import mongoose, { Model, Schema } from "mongoose";
 import { IUser } from "../../types/user.types";
 import { maxHeaderSize } from "http";
-import { number } from "joi";
+import { boolean, number, required } from "joi";
 
 const schema: Schema<IUser> = new Schema<IUser>(
   {
@@ -32,6 +32,16 @@ const schema: Schema<IUser> = new Schema<IUser>(
       type: Date,
       required: true,
     },
+    isVerfied: {
+      type: Boolean,
+      default: false,
+    },
+    OTP: {
+      type: Number,
+    },
+    OTPCreatedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -40,6 +50,8 @@ const schema: Schema<IUser> = new Schema<IUser>(
         delete ret.password;
         delete ret.code;
         delete ret.codeCreatedAt;
+        delete ret.OTP;
+        delete ret.OTPCreatedAt;
         return ret;
       },
     },

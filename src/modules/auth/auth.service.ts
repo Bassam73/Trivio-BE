@@ -1,9 +1,14 @@
 import AppError from "../../core/utils/AppError";
 import sendMail from "../../core/utils/mailer";
-import userModel from "../../database/models/user.model";
-import { IUser, signupDTO } from "../../types/user.types";
+import {
+  IUser,
+  loginDTO,
+  signupDTO,
+  verifyAccountDTO,
+} from "../../types/user.types";
 import AuthRepository from "./auth.repo";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 export default class AuthService {
   private static instance: AuthService;
   private repo: AuthRepository;
@@ -25,6 +30,54 @@ export default class AuthService {
     const user = await this.repo.createUser(data);
     if (!user) throw new AppError("Error While creating the user", 500);
     return user;
+  }
+
+  async login(data: loginDTO): Promise<String | null> {
+    if (!data.username && !data.email) {
+      throw new AppError("Username or email is required", 400);
+    }
+    if (data.username && data.email) {
+      throw new AppError("Provide either username or email, not both", 400);
+    }
+
+    let user;
+    if (data.username) {
+      user = await this.repo.findUserByUsername(data.username);
+    } else if (data.email) {
+      user = await this.repo.findUserByEmail(data.email);
+    }
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (!user.password) {
+      throw new AppError("User password not set", 500);
+    }
+    const validPassword = await bcrypt.compare(data.password, user.password);
+    if (!validPassword) {
+      throw new AppError("Invalid password", 401);
+    }
+    const token = jwt.sign(
+      { id: user._id, username: user.username, email: user.email },
+      process.env.JWT_SECRET!,
+      { expiresIn: "1d" }
+    );
+    return token;
+  }
+
+  async verfiyAccount(data: verifyAccountDTO) {
+    const user = await this.repo.findUserByEmail(data.email);
+    if (!user) throw new AppError("Account Not Found", 404);
+    if (user.isVerfied) throw new AppError("User Is Already Verified", 409);
+    if (!user.code) throw new AppError("Verfication Code is expired", 409);
+    const isCorrect = user.code == (data.code as unknown as number);
+    if (!isCorrect) throw new AppError("Verfication code is wrong", 400);
+    this.repo.verifyUser(user.id);
+  }
+
+  async checkVerficationCodes(): Promise<number> {
+    let counter: number;
+    counter = (await this.repo.updateAllUnVerifiedUsers()).modifiedCount;
+    return counter;
   }
   static getInstance() {
     if (!AuthService.instance) {

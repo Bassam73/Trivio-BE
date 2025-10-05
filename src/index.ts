@@ -3,12 +3,14 @@ import env from "dotenv";
 import dbConnection from "./config/dbConnection";
 import AppError from "./core/utils/AppError";
 import bootstrap from "./modules/index.router";
+import startAllCrons from "./config/cron";
+env.config();
 
 const app = express();
-env.config();
 dbConnection();
 app.use(express.json());
 bootstrap(app);
+startAllCrons();
 app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
   err.statusCode = err.statusCode || 500;
   err.message = err.message || "Internal Server Error";
