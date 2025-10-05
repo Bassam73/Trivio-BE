@@ -1,8 +1,10 @@
 import AppError from "../../core/utils/AppError";
 import sendMail from "../../core/utils/mailer";
 import {
+  forgetPasswordDTO,
   IUser,
   loginDTO,
+  requsetOtpDTO,
   signupDTO,
   verifyAccountDTO,
 } from "../../types/user.types";
@@ -26,7 +28,7 @@ export default class AuthService {
     data.password = await bcrypt.hash(data.password, 12);
     data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     data.codeCreatedAt = new Date(Date.now());
-    await sendMail(data.email, data.username, data.code);
+    await sendMail(data.email, data.username, data.code, "code");
     const user = await this.repo.createUser(data);
     if (!user) throw new AppError("Error While creating the user", 500);
     return user;
@@ -52,6 +54,9 @@ export default class AuthService {
     if (!user.password) {
       throw new AppError("User password not set", 500);
     }
+    if (!user.isVerfied) {
+      throw new AppError("Account is not verified", 403);
+    }
     const validPassword = await bcrypt.compare(data.password, user.password);
     if (!validPassword) {
       throw new AppError("Invalid password", 401);
@@ -64,6 +69,16 @@ export default class AuthService {
     return token;
   }
 
+  async requestOTP(data: requsetOtpDTO) {
+    const user = await this.repo.findUserByEmail(data.email);
+    if (!user) {
+      throw new AppError("Account not found", 404);
+    }
+    const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+    await this.repo.setOTP(user.id, otp);
+    await sendMail(user.email, user.username, otp, "otp");
+    return;
+  }
   async verfiyAccount(data: verifyAccountDTO) {
     const user = await this.repo.findUserByEmail(data.email);
     if (!user) throw new AppError("Account Not Found", 404);
@@ -74,10 +89,26 @@ export default class AuthService {
     this.repo.verifyUser(user.id);
   }
 
+  async checkOTPRequests(): Promise<number> {
+    let counter: number;
+    counter = (await this.repo.deleteAllExpiredOTP()).modifiedCount;
+    return counter;
+  }
   async checkVerficationCodes(): Promise<number> {
     let counter: number;
     counter = (await this.repo.updateAllUnVerifiedUsers()).modifiedCount;
     return counter;
+  }
+  async forgetPassword(data: forgetPasswordDTO) : Promise<IUser> {
+    const user = await this.repo.findUserByEmail(data.email);
+    if (!user) throw new AppError("Account Not Found", 404);
+    if (!user.OTP) throw new AppError("OTP is expired", 409);
+    const isOTPCorrect = user.OTP == (data.otp as unknown as number);
+    if (!isOTPCorrect) throw new AppError("Invalid OTP", 400);
+    const password = await bcrypt.hash(data.password, 12);
+    const updatedUser = await this.repo.updatePassword(user.id, password);
+    if(!updatedUser) throw new AppError("Error while updating user" ,500)
+    return updatedUser;
   }
   static getInstance() {
     if (!AuthService.instance) {

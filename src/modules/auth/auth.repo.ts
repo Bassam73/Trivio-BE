@@ -1,6 +1,6 @@
 import { UpdateResult } from "mongoose";
 import userModel from "../../database/models/user.model";
-import { IUser, signupDTO } from "../../types/user.types";
+import { forgetPasswordDTO, IUser, signupDTO } from "../../types/user.types";
 
 class AuthRepository {
   private static instance: AuthRepository;
@@ -36,8 +36,32 @@ class AuthRepository {
       { $set: { code: null, codeCreatedAt: null, isVerfied: false } }
     );
   }
+
+  async deleteAllExpiredOTP() {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    return await userModel.updateMany(
+      { OTPCreatedAt: { $lt: fiveMinutesAgo } },
+      {
+        $set: { OTP: null, OTPCreatedAt: null },
+      }
+    );
+  }
   async deleteVerficationCode(id: string) {
     await userModel.findByIdAndUpdate(id, { code: null, codeCreatedAt: null });
+  }
+  async setOTP(id: string, otp: number) {
+    await userModel.findByIdAndUpdate(id, {
+      OTP: otp,
+      OTPCreatedAt: Date.now(),
+    });
+  }
+
+  async updatePassword(id: string, password: string): Promise<IUser | null> {
+    return await userModel.findByIdAndUpdate(id, {
+      password,
+      OTP: null,
+      OTPCreatedAt: null,
+    });
   }
   static getInstance() {
     if (!AuthRepository.instance) {
