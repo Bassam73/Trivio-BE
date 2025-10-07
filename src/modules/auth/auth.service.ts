@@ -2,6 +2,7 @@ import { env } from "process";
 import AppError from "../../core/utils/AppError";
 import sendMail from "../../core/utils/mailer";
 import {
+  changePasswordDTO,
   forgetPasswordDTO,
   IUser,
   loginDTO,
@@ -23,9 +24,15 @@ export default class AuthService {
     if (!data.password) throw new AppError("Password is required", 400);
     const checkEmail = await this.repo.findUserByEmailSignup(data.email);
     if (checkEmail) throw new AppError("This email is used before", 409);
-    const checkUsername = await this.repo.findUserByUsernameSignup(data.username);    console.log(checkUsername);
+    const checkUsername = await this.repo.findUserByUsernameSignup(
+      data.username
+    );
+    console.log(checkUsername);
     if (checkUsername) throw new AppError("This is username is taken", 409);
-    data.password = await bcrypt.hash(data.password, parseInt(process.env.SALT_ROUNDS!));
+    data.password = await bcrypt.hash(
+      data.password,
+      parseInt(process.env.SALT_ROUNDS!)
+    );
     data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     data.codeCreatedAt = new Date(Date.now());
     await sendMail(data.email, data.username, data.code, "code");
@@ -99,15 +106,32 @@ export default class AuthService {
     counter = (await this.repo.updateAllUnVerifiedUsers()).modifiedCount;
     return counter;
   }
-  async forgetPassword(data: forgetPasswordDTO) : Promise<IUser> {
+  async forgetPassword(data: forgetPasswordDTO): Promise<IUser> {
     const user = await this.repo.findUserByEmail(data.email);
     if (!user) throw new AppError("Account Not Found", 404);
     if (!user.OTP) throw new AppError("OTP is expired", 409);
     const isOTPCorrect = user.OTP == (data.otp as unknown as number);
     if (!isOTPCorrect) throw new AppError("Invalid OTP", 400);
-    const password = await bcrypt.hash(data.password, parseInt(process.env.SALT_ROUNDS!));
+    const password = await bcrypt.hash(
+      data.password,
+      parseInt(process.env.SALT_ROUNDS!)
+    );
     const updatedUser = await this.repo.updatePassword(user.id, password);
-    if(!updatedUser) throw new AppError("Error while updating user" ,500)
+    if (!updatedUser) throw new AppError("Error while updating user", 500);
+    return updatedUser;
+  }
+
+  async changePassword(data: changePasswordDTO) {
+    const isPasswordCorrect = await bcrypt.compare(
+      data.currentPassword,
+      data.savedPassword
+    );
+    if (!isPasswordCorrect) throw new AppError("Incorrect Password", 400);
+    data.newPassword = await bcrypt.hash(data.newPassword, 12);
+    const updatedUser = await this.repo.updatePassword(
+      data.id,
+      data.newPassword
+    );
     return updatedUser;
   }
   static getInstance() {

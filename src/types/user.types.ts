@@ -40,3 +40,10 @@ export interface forgetPasswordDTO {
   otp: string;
   password: string;
 }
+
+export interface changePasswordDTO {
+  id: string;
+  currentPassword: string;
+  savedPassword: string;
+  newPassword: string;
+}

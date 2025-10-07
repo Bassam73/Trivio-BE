@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import catchError from "../../core/middlewares/catchError";
 import AuthService from "./auth.service";
 import {
+  changePasswordDTO,
   forgetPasswordDTO,
   loginDTO,
   requsetOtpDTO,
@@ -45,7 +46,25 @@ const forgetPassword = catchError(
   async (req: Request, res: Response, next: NextFunction) => {
     const data: forgetPasswordDTO = req.body;
     const user = await service.forgetPassword(data);
-    res.status(202).json({ status: "success", data: [user] });
+    res.status(200).json({ status: "success", data: [user] });
   }
 );
-export { signUp, login, verifyCode, requestOTP, forgetPassword };
+
+const changePassword = catchError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const data: changePasswordDTO = req.body;
+    data.savedPassword = req.user?.password as string;
+    data.id = req.user?.id;
+    const user = await service.changePassword(data);
+    res.status(200).json({ status: "success", data: [user] });
+  }
+);
+
+export {
+  signUp,
+  login,
+  verifyCode,
+  requestOTP,
+  forgetPassword,
+  changePassword,
+};

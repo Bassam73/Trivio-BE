@@ -3,6 +3,7 @@ import AppError from "../utils/AppError";
 import jwt from "jsonwebtoken";
 import catchError from "./catchError";
 import userModel from "../../database/models/user.model";
+import { JwtPayload } from "jsonwebtoken";
 
 const protectedRoutes = catchError(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -20,7 +21,7 @@ const protectedRoutes = catchError(
       );
     }
 
-    const secret = process.env.JWT_SECRET_KEY;
+    const secret = process.env.JWT_SECRET;
     if (!secret) {
       return next(
         new AppError(
@@ -30,13 +31,12 @@ const protectedRoutes = catchError(
       );
     }
 
-    const decoded = jwt.verify(token, secret) as {
-      userId: string;
-      iat: number;
-    };
+    const decoded = jwt.verify(token, secret) as JwtPayload;
+    if (!decoded || !decoded.id) {
+      return next(new AppError("Invalid token payload.", 401));
+    }
 
-    const user = await userModel.findById(decoded.userId);
-
+    const user = await userModel.findById(decoded.id);
     if (!user) {
       return next(
         new AppError("The user belonging to this token no longer exists.", 401)
@@ -48,8 +48,7 @@ const protectedRoutes = catchError(
         (user.passwordChangedAt.getTime() / 1000).toString(),
         10
       );
-
-      if (changedTimestamp > decoded.iat) {
+      if (decoded.iat && changedTimestamp > decoded.iat) {
         return next(
           new AppError(
             "User recently changed password! Please log in again.",

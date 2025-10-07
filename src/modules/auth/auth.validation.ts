@@ -31,4 +31,20 @@ const forgetPasswordVal = Joi.object({
     .regex(/^(?=.*[A-Za-z])(?=.*\d).{8,}$/)
     .required(),
 });
-export { signUpVal, loginVal, verifyUserVal, requestOTPVal, forgetPasswordVal };
+
+const changePasswordVal = Joi.object({
+  currentPassword: Joi.string()
+    .regex(/^(?=.*[A-Za-z])(?=.*\d).{8,}$/)
+    .required(),
+  newPassword: Joi.string()
+    .regex(/^(?=.*[A-Za-z])(?=.*\d).{8,}$/)
+    .required(),
+});
+export {
+  signUpVal,
+  loginVal,
+  verifyUserVal,
+  requestOTPVal,
+  forgetPasswordVal,
+  changePasswordVal,
+};

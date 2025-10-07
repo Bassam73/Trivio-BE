@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  changePassword,
   forgetPassword,
   login,
   requestOTP,
@@ -8,12 +9,14 @@ import {
 } from "./auth.controller";
 import valid from "express-joi-validation";
 import {
+  changePasswordVal,
   forgetPasswordVal,
   loginVal,
   requestOTPVal,
   signUpVal,
   verifyUserVal,
 } from "./auth.validation";
+import protectedRoutes from "../../core/middlewares/protectedRoutes";
 const authRouter = express.Router();
 const validator = valid.createValidator();
 
@@ -25,5 +28,11 @@ authRouter.patch(
   "/forget-password",
   validator.body(forgetPasswordVal),
   forgetPassword
+);
+authRouter.patch(
+  "/change-password",
+  protectedRoutes,
+  validator.body(changePasswordVal),
+  changePassword
 );
 export default authRouter;
