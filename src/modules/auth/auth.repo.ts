@@ -8,17 +8,20 @@ class AuthRepository {
   private constructor() {}
 
   async findUserByEmail(email: string): Promise<IUser | null> {
-    return await userModel.findOne({ email , isVerfied : true});
+    return await userModel.findOne({ email , isVerified : true});
+  }
+    async findUserByEmailVerify(email: string): Promise<IUser | null> {
+    return await userModel.findOne({ email });
   }
   async findUserByUsername(username: string): Promise<IUser | null> {
-    return await userModel.findOne({ username, isVerfied : true});
+    return await userModel.findOne({ username, isVerified : true});
   }
   async createUser(data: signupDTO): Promise<IUser> {
     return await userModel.create(data);
   }
   async verifyUser(id: string) {
     await userModel.findByIdAndUpdate(id, {
-      isVerfied: true,
+      isVerified: true,
       code: null,
       codeCreatedAt: null,
     });
@@ -30,10 +33,10 @@ class AuthRepository {
       {
         $and: [
           { codeCreatedAt: { $lt: fifteenMinutesAgo } },
-          { $or: [{ isVerfied: false }, { isVerfied: { $exists: false } }] },
+          { $or: [{ isVerified: false }, { isVerified: { $exists: false } }] },
         ],
       },
-      { $set: { code: null, codeCreatedAt: null, isVerfied: false } }
+      { $set: { code: null, codeCreatedAt: null, isVerified: false } }
     );
   }
 
@@ -60,7 +63,7 @@ class AuthRepository {
   return await userModel.findOneAndUpdate(
     {
       _id: id,
-      isVerfied: true,
+      isVerified: true,
     },
     {
       $set: {

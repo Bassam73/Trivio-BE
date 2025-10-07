@@ -25,7 +25,7 @@ export default class AuthService {
     if (checkEmail) throw new AppError("This email is used before", 409);
     const checkUsername = await this.repo.findUserByUsername(data.username);
     if (checkUsername) throw new AppError("This is username is taken", 409);
-    data.password = await bcrypt.hash(data.password, process.env.SALT_ROUNDS!);
+    data.password = await bcrypt.hash(data.password, parseInt(process.env.SALT_ROUNDS!));
     data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     data.codeCreatedAt = new Date(Date.now());
     await sendMail(data.email, data.username, data.code, "code");
@@ -54,7 +54,7 @@ export default class AuthService {
     if (!user.password) {
       throw new AppError("User password not set", 500);
     }
-    if (!user.isVerfied) {
+    if (!user.isVerified) {
       throw new AppError("Account is not verified", 403);
     }
     const validPassword = await bcrypt.compare(data.password, user.password);
@@ -80,9 +80,9 @@ export default class AuthService {
     return;
   }
   async verfiyAccount(data: verifyAccountDTO) {
-    const user = await this.repo.findUserByEmail(data.email);
+    const user = await this.repo.findUserByEmailVerify(data.email);
     if (!user) throw new AppError("Account Not Found", 404);
-    if (user.isVerfied) throw new AppError("User Is Already Verified", 409);
+    if (user.isVerified) throw new AppError("User Is Already Verified", 409);
     if (!user.code) throw new AppError("Verfication Code is expired", 409);
     const isCorrect = user.code == (data.code as unknown as number);
     if (!isCorrect) throw new AppError("Verfication code is wrong", 400);
@@ -105,7 +105,7 @@ export default class AuthService {
     if (!user.OTP) throw new AppError("OTP is expired", 409);
     const isOTPCorrect = user.OTP == (data.otp as unknown as number);
     if (!isOTPCorrect) throw new AppError("Invalid OTP", 400);
-    const password = await bcrypt.hash(data.password, process.env.SALT_ROUNDS!);
+    const password = await bcrypt.hash(data.password, parseInt(process.env.SALT_ROUNDS!));
     const updatedUser = await this.repo.updatePassword(user.id, password);
     if(!updatedUser) throw new AppError("Error while updating user" ,500)
     return updatedUser;

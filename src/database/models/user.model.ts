@@ -32,7 +32,7 @@ const schema: Schema<IUser> = new Schema<IUser>(
       type: Date,
       required: true,
     },
-    isVerfied: {
+    isVerified: {
       type: Boolean,
       default: false,
     },
