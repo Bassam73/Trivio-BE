@@ -4,11 +4,13 @@ import dbConnection from "./config/dbConnection";
 import AppError from "./core/utils/AppError";
 import bootstrap from "./modules/index.router";
 import startAllCrons from "./config/cron";
+import cors from "cors";
 env.config();
 
 const app = express();
 dbConnection();
 app.use(express.json());
+app.use(cors());
 bootstrap(app);
 startAllCrons();
 app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {

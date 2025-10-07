@@ -21,9 +21,9 @@ export default class AuthService {
 
   async signup(data: signupDTO): Promise<IUser> {
     if (!data.password) throw new AppError("Password is required", 400);
-    const checkEmail = await this.repo.findUserByEmail(data.email);
+    const checkEmail = await this.repo.findUserByEmailSignup(data.email);
     if (checkEmail) throw new AppError("This email is used before", 409);
-    const checkUsername = await this.repo.findUserByUsername(data.username);
+    const checkUsername = await this.repo.findUserByUsernameSignup(data.username);    console.log(checkUsername);
     if (checkUsername) throw new AppError("This is username is taken", 409);
     data.password = await bcrypt.hash(data.password, parseInt(process.env.SALT_ROUNDS!));
     data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;

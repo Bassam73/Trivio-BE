@@ -10,8 +10,15 @@ class AuthRepository {
   async findUserByEmail(email: string): Promise<IUser | null> {
     return await userModel.findOne({ email , isVerified : true});
   }
-    async findUserByEmailVerify(email: string): Promise<IUser | null> {
+
+  async findUserByEmailVerify(email: string): Promise<IUser | null> {
     return await userModel.findOne({ email });
+  }
+  async findUserByEmailSignup(email: string): Promise<IUser | null> {
+    return await userModel.findOne({ email });
+  }
+  async findUserByUsernameSignup(username: string): Promise<IUser | null> {
+    return await userModel.findOne({ username});
   }
   async findUserByUsername(username: string): Promise<IUser | null> {
     return await userModel.findOne({ username, isVerified : true});
