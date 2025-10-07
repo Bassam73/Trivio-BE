@@ -8,10 +8,10 @@ class AuthRepository {
   private constructor() {}
 
   async findUserByEmail(email: string): Promise<IUser | null> {
-    return await userModel.findOne({ email });
+    return await userModel.findOne({ email , isVerfied : true});
   }
   async findUserByUsername(username: string): Promise<IUser | null> {
-    return await userModel.findOne({ username });
+    return await userModel.findOne({ username, isVerfied : true});
   }
   async createUser(data: signupDTO): Promise<IUser> {
     return await userModel.create(data);
@@ -56,13 +56,23 @@ class AuthRepository {
     });
   }
 
-  async updatePassword(id: string, password: string): Promise<IUser | null> {
-    return await userModel.findByIdAndUpdate(id, {
-      password,
-      OTP: null,
-      OTPCreatedAt: null,
-    });
-  }
+ async updatePassword(id: string, password: string): Promise<IUser | null> {
+  return await userModel.findOneAndUpdate(
+    {
+      _id: id,
+      isVerfied: true,
+    },
+    {
+      $set: {
+        password,
+        OTP: null,
+        OTPCreatedAt: null,
+      },
+    },
+    { new: true }
+  );
+}
+
   static getInstance() {
     if (!AuthRepository.instance) {
       AuthRepository.instance = new AuthRepository();

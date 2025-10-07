@@ -1,3 +1,4 @@
+import { env } from "process";
 import AppError from "../../core/utils/AppError";
 import sendMail from "../../core/utils/mailer";
 import {
@@ -19,13 +20,12 @@ export default class AuthService {
   }
 
   async signup(data: signupDTO): Promise<IUser> {
-    if (data.password !== data.confirm_password)
-      throw new AppError("Password and confirm_password are not matching", 400);
+    if (!data.password) throw new AppError("Password is required", 400);
     const checkEmail = await this.repo.findUserByEmail(data.email);
     if (checkEmail) throw new AppError("This email is used before", 409);
     const checkUsername = await this.repo.findUserByUsername(data.username);
     if (checkUsername) throw new AppError("This is username is taken", 409);
-    data.password = await bcrypt.hash(data.password, 12);
+    data.password = await bcrypt.hash(data.password, process.env.SALT_ROUNDS!);
     data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     data.codeCreatedAt = new Date(Date.now());
     await sendMail(data.email, data.username, data.code, "code");
@@ -105,7 +105,7 @@ export default class AuthService {
     if (!user.OTP) throw new AppError("OTP is expired", 409);
     const isOTPCorrect = user.OTP == (data.otp as unknown as number);
     if (!isOTPCorrect) throw new AppError("Invalid OTP", 400);
-    const password = await bcrypt.hash(data.password, 12);
+    const password = await bcrypt.hash(data.password, process.env.SALT_ROUNDS!);
     const updatedUser = await this.repo.updatePassword(user.id, password);
     if(!updatedUser) throw new AppError("Error while updating user" ,500)
     return updatedUser;

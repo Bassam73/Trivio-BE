@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import getVerficatioFile from "../../templates/verfication";
+import getVerificationFile from "../../templates/verfication";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
 import getOTPFile from "../../templates/otp";
 
@@ -16,24 +16,27 @@ export default async function sendMail(
       pass: process.env.GMAIL_APP_PASSWORD,
     },
   });
-  let info: SMTPTransport.SentMessageInfo;
-  if (type == "code") {
-    info = await transporter.sendMail({
-      from: `"Trivio Auth System" <${process.env.GMAIL_APP_ACCOUNT}>`,
-      to: email,
-      subject: "Hello ✔",
-      text: "Hello world?", // plain‑text body
-      html: getVerficatioFile(username, code), // HTML body
-    });
-  } else {
-    info = await transporter.sendMail({
-      from: `"Trivio Auth System" <${process.env.GMAIL_APP_ACCOUNT}>`,
-      to: email,
-      subject: "Hello ✔",
-      text: "Hello world?", // plain‑text body
-      html: getOTPFile(username, code), // HTML body
-    });
-  }
 
-  console.log("Message sent:", info.messageId);
+  let info: SMTPTransport.SentMessageInfo;
+
+  const from = `"Trivio Authentication" <${process.env.GMAIL_APP_ACCOUNT}>`;
+  const subject =
+    type === "code"
+      ? "Email Verification - Trivio"
+      : "One-Time Password (OTP) - Trivio";
+
+  const html =
+    type === "code"
+      ? getVerificationFile(username, code)
+      : getOTPFile(username, code);
+
+  info = await transporter.sendMail({
+    from,
+    to: email,
+    subject,
+    text: `Hi ${username}, your ${type === "code" ? "verification code" : "OTP"} is ${code}.`,
+    html,
+  });
+
+  console.log("Email sent successfully:", info.messageId);
 }

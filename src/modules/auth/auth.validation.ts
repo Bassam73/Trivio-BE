@@ -6,9 +6,6 @@ const signUpVal = Joi.object({
   password: Joi.string()
     .regex(/^(?=.*[A-Za-z])(?=.*\d).{8,}$/)
     .required(),
-  confirm_password: Joi.string()
-    .regex(/^(?=.*[A-Za-z])(?=.*\d).{8,}$/)
-    .required(),
 });
 
 const loginVal = Joi.object({

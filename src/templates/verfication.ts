@@ -1,4 +1,4 @@
-export default function getVerficatioFile(username: string, code: number) {
+export default function getVerificationFile(username: string, code: number) {
   return `
         <!doctype html>
 <html lang="en">

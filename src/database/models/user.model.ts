@@ -36,6 +36,10 @@ const schema: Schema<IUser> = new Schema<IUser>(
       type: Boolean,
       default: false,
     },
+    isPremium: {
+      type: Boolean,
+      default: false,
+    },
     OTP: {
       type: Number,
     },

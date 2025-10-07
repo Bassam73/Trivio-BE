@@ -9,13 +9,13 @@ export interface IUser extends Document {
   isVerfied: boolean;
   OTP?: number;
   OTPCreatedAt?: Date;
+  isPremium: boolean;
 }
 
 export interface signupDTO {
   username: string;
   email: string;
   password: string;
-  confirm_password: string;
   code?: number;
   codeCreatedAt?: Date;
   isVerfied?: boolean;
