@@ -8,7 +8,7 @@ class AuthRepository {
   private constructor() {}
 
   async findUserByEmail(email: string): Promise<IUser | null> {
-    return await userModel.findOne({ email , isVerified : true});
+    return await userModel.findOne({ email, isVerified: true });
   }
 
   async findUserByEmailVerify(email: string): Promise<IUser | null> {
@@ -18,10 +18,10 @@ class AuthRepository {
     return await userModel.findOne({ email });
   }
   async findUserByUsernameSignup(username: string): Promise<IUser | null> {
-    return await userModel.findOne({ username});
+    return await userModel.findOne({ username });
   }
   async findUserByUsername(username: string): Promise<IUser | null> {
-    return await userModel.findOne({ username, isVerified : true});
+    return await userModel.findOne({ username, isVerified: true });
   }
   async createUser(data: signupDTO): Promise<IUser> {
     return await userModel.create(data);
@@ -66,22 +66,23 @@ class AuthRepository {
     });
   }
 
- async updatePassword(id: string, password: string): Promise<IUser | null> {
-  return await userModel.findOneAndUpdate(
-    {
-      _id: id,
-      isVerified: true,
-    },
-    {
-      $set: {
-        password,
-        OTP: null,
-        OTPCreatedAt: null,
+  async updatePassword(id: string, password: string): Promise<IUser | null> {
+    return await userModel.findOneAndUpdate(
+      {
+        _id: id,
+        isVerified: true,
       },
-    },
-    { new: true }
-  );
-}
+      {
+        $set: {
+          password,
+          passwordChangedAt: Date.now(),
+          OTP: null,
+          OTPCreatedAt: null,
+        },
+      },
+      { new: true }
+    );
+  }
 
   static getInstance() {
     if (!AuthRepository.instance) {

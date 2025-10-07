@@ -12,6 +12,11 @@ const schema: Schema<IUser> = new Schema<IUser>(
       maxHeaderSize: 20,
       unique: true,
     },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
     email: {
       type: String,
       required: true,
@@ -21,6 +26,9 @@ const schema: Schema<IUser> = new Schema<IUser>(
       type: String,
       required: true,
       minlength: 8,
+    },
+    passwordChangedAt: {
+      type: Date,
     },
     code: {
       type: Number,

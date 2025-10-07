@@ -3,7 +3,9 @@ import { Document } from "mongoose";
 export interface IUser extends Document {
   username: string;
   email: string;
+  role: string;
   password?: string;
+  passwordChangedAt?: Date;
   code?: number;
   codeCreatedAt?: Date;
   isVerified: boolean;
