@@ -69,6 +69,12 @@ const resendVerificationCode = catchError(
   }
 );
 
+const googleLogin = catchError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const token = await service.googleLogin(req.body.idToken);
+    res.status(200).json({ status: "success", data: [token] });
+  }
+);
 export {
   signUp,
   login,
@@ -77,4 +83,5 @@ export {
   forgetPassword,
   changePassword,
   resendVerificationCode,
+  googleLogin,
 };

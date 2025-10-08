@@ -17,7 +17,7 @@ export interface IUser extends Document {
 export interface signupDTO {
   username: string;
   email: string;
-  password: string;
+  password: string | null;
   code?: number;
   codeCreatedAt?: Date;
   isVerified?: boolean;
