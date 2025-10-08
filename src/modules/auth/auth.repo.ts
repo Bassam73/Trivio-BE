@@ -1,4 +1,4 @@
-import { UpdateResult } from "mongoose";
+import { DeleteResult, UpdateResult } from "mongoose";
 import userModel from "../../database/models/user.model";
 import {
   forgetPasswordDTO,
@@ -38,18 +38,15 @@ class AuthRepository {
       codeCreatedAt: null,
     });
   }
-  async updateAllUnVerifiedUsers(): Promise<UpdateResult> {
+  async deleteAllUnVerifiedUsers(): Promise<DeleteResult> {
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
 
-    return await userModel.updateMany(
-      {
-        $and: [
-          { codeCreatedAt: { $lt: fifteenMinutesAgo } },
-          { $or: [{ isVerified: false }, { isVerified: { $exists: false } }] },
-        ],
-      },
-      { $set: { code: null, codeCreatedAt: null, isVerified: false } }
-    );
+    return await userModel.deleteMany({
+      $and: [
+        { codeCreatedAt: { $lt: fifteenMinutesAgo } },
+        { $or: [{ isVerified: false }, { isVerified: { $exists: false } }] },
+      ],
+    });
   }
 
   async deleteAllExpiredOTP() {

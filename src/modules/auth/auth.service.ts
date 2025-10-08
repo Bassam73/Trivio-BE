@@ -104,7 +104,7 @@ export default class AuthService {
   }
   async checkVerficationCodes(): Promise<number> {
     let counter: number;
-    counter = (await this.repo.updateAllUnVerifiedUsers()).modifiedCount;
+    counter = (await this.repo.deleteAllUnVerifiedUsers()).deletedCount;
     return counter;
   }
   async forgetPassword(data: forgetPasswordDTO): Promise<IUser> {
