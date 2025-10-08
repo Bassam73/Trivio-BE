@@ -40,6 +40,10 @@ const changePasswordVal = Joi.object({
     .regex(/^(?=.*[A-Za-z])(?=.*\d).{8,}$/)
     .required(),
 });
+
+const resendVerificationCodeVal = Joi.object({
+  email: Joi.string().email().required(),
+});
 export {
   signUpVal,
   loginVal,
@@ -47,4 +51,5 @@ export {
   requestOTPVal,
   forgetPasswordVal,
   changePasswordVal,
+  resendVerificationCodeVal,
 };

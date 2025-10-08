@@ -1,4 +1,4 @@
-import { env } from "process";
+import { env, throwDeprecation } from "process";
 import AppError from "../../core/utils/AppError";
 import sendMail from "../../core/utils/mailer";
 import {
@@ -7,6 +7,7 @@ import {
   IUser,
   loginDTO,
   requsetOtpDTO,
+  resetVerficationCodeDTO,
   signupDTO,
   verifyAccountDTO,
 } from "../../types/user.types";
@@ -134,6 +135,17 @@ export default class AuthService {
     );
     return updatedUser;
   }
+
+  async resendVerificationCode(data: resetVerficationCodeDTO) {
+    const user = await this.repo.findUserByEmailVerify(data.email);
+    if (!user) throw new AppError("User Not Found", 404);
+    if (user.isVerified) throw new AppError("User is already verified", 409);
+    data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+    const updatedUser = await this.repo.resetVerificationCode(data);
+    if (!updatedUser) throw new AppError("Error While Updating User Data", 500);
+    await sendMail(updatedUser.email, updatedUser.username, data.code, "code");
+  }
+
   static getInstance() {
     if (!AuthService.instance) {
       AuthService.instance = new AuthService();

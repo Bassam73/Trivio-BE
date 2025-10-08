@@ -4,6 +4,7 @@ import {
   forgetPassword,
   login,
   requestOTP,
+  resendVerificationCode,
   signUp,
   verifyCode,
 } from "./auth.controller";
@@ -13,6 +14,7 @@ import {
   forgetPasswordVal,
   loginVal,
   requestOTPVal,
+  resendVerificationCodeVal,
   signUpVal,
   verifyUserVal,
 } from "./auth.validation";
@@ -34,5 +36,11 @@ authRouter.patch(
   protectedRoutes,
   validator.body(changePasswordVal),
   changePassword
+);
+
+authRouter.patch(
+  "/resend-verification-code",
+  validator.body(resendVerificationCodeVal),
+  resendVerificationCode
 );
 export default authRouter;

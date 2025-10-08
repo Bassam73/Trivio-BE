@@ -1,6 +1,11 @@
 import { UpdateResult } from "mongoose";
 import userModel from "../../database/models/user.model";
-import { forgetPasswordDTO, IUser, signupDTO } from "../../types/user.types";
+import {
+  forgetPasswordDTO,
+  IUser,
+  resetVerficationCodeDTO,
+  signupDTO,
+} from "../../types/user.types";
 
 class AuthRepository {
   private static instance: AuthRepository;
@@ -84,6 +89,17 @@ class AuthRepository {
     );
   }
 
+  async resetVerificationCode(
+    data: resetVerficationCodeDTO
+  ): Promise<IUser | null> {
+    return await userModel.findOneAndUpdate(
+      { email: data.email },
+      { code: data.code, codeCreatedAt: Date.now() },
+      {
+        new: true,
+      }
+    );
+  }
   static getInstance() {
     if (!AuthRepository.instance) {
       AuthRepository.instance = new AuthRepository();

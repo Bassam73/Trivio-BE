@@ -47,3 +47,8 @@ export interface changePasswordDTO {
   savedPassword: string;
   newPassword: string;
 }
+
+export interface resetVerficationCodeDTO {
+  email: string;
+  code?: number;
+}

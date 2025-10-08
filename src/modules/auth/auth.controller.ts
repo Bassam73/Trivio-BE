@@ -6,6 +6,7 @@ import {
   forgetPasswordDTO,
   loginDTO,
   requsetOtpDTO,
+  resetVerficationCodeDTO,
   signupDTO,
   verifyAccountDTO,
 } from "../../types/user.types";
@@ -60,6 +61,14 @@ const changePassword = catchError(
   }
 );
 
+const resendVerificationCode = catchError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const data: resetVerficationCodeDTO = req.body;
+    await service.resendVerificationCode(data);
+    res.status(200).json({ status: "success" });
+  }
+);
+
 export {
   signUp,
   login,
@@ -67,4 +76,5 @@ export {
   requestOTP,
   forgetPassword,
   changePassword,
+  resendVerificationCode,
 };
