@@ -44,6 +44,10 @@ const changePasswordVal = Joi.object({
 const resendVerificationCodeVal = Joi.object({
   email: Joi.string().email().required(),
 });
+
+const googleLoginVal = Joi.object({
+  idToken: Joi.string().required(),
+});
 export {
   signUpVal,
   loginVal,
@@ -52,4 +56,5 @@ export {
   forgetPasswordVal,
   changePasswordVal,
   resendVerificationCodeVal,
+  googleLoginVal,
 };

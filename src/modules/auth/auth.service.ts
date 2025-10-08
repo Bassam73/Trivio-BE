@@ -14,6 +14,10 @@ import {
 import AuthRepository from "./auth.repo";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 export default class AuthService {
   private static instance: AuthService;
   private repo: AuthRepository;
@@ -144,6 +148,35 @@ export default class AuthService {
     const updatedUser = await this.repo.resetVerificationCode(data);
     if (!updatedUser) throw new AppError("Error While Updating User Data", 500);
     await sendMail(updatedUser.email, updatedUser.username, data.code, "code");
+  }
+
+  async googleLogin(idToken: string): Promise<string> {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    if (!payload) throw new AppError("Invalid Google token", 401);
+    const { email } = payload;
+    if (!email) throw new AppError("Google account must have an email", 400);
+    let user = await this.repo.findUserByEmailSignup(email);
+    if (!user) {
+      const newData: signupDTO = {
+        email: email,
+        username: email.split("@")[0],
+        password: null,
+        isVerified: true,
+      };
+      user = await this.repo.createUser(newData);
+    }
+
+    if (!user) throw new AppError("Error While creating user", 500);
+    const token = jwt.sign(
+      { id: user._id, username: user.username, email: user.email },
+      process.env.JWT_SECRET!,
+      { expiresIn: "1d" }
+    );
+    return token;
   }
 
   static getInstance() {

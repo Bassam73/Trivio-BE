@@ -2,6 +2,7 @@ import express from "express";
 import {
   changePassword,
   forgetPassword,
+  googleLogin,
   login,
   requestOTP,
   resendVerificationCode,
@@ -12,6 +13,7 @@ import valid from "express-joi-validation";
 import {
   changePasswordVal,
   forgetPasswordVal,
+  googleLoginVal,
   loginVal,
   requestOTPVal,
   resendVerificationCodeVal,
@@ -43,4 +45,5 @@ authRouter.patch(
   validator.body(resendVerificationCodeVal),
   resendVerificationCode
 );
+authRouter.post("/google-login", validator.body(googleLoginVal), googleLogin);
 export default authRouter;
