@@ -52,3 +52,8 @@ export interface resetVerficationCodeDTO {
   email: string;
   code?: number;
 }
+
+export interface changeEmailInVerifyDTO {
+  email: string;
+  id: string;
+}

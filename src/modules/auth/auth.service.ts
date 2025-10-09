@@ -2,6 +2,7 @@ import { env, throwDeprecation } from "process";
 import AppError from "../../core/utils/AppError";
 import sendMail from "../../core/utils/mailer";
 import {
+  changeEmailInVerifyDTO,
   changePasswordDTO,
   forgetPasswordDTO,
   IUser,
@@ -25,26 +26,109 @@ export default class AuthService {
     this.repo = AuthRepository.getInstance();
   }
 
-  async signup(data: signupDTO): Promise<IUser> {
-    if (!data.password) throw new AppError("Password is required", 400);
-    const checkEmail = await this.repo.findUserByEmailSignup(data.email);
-    if (checkEmail) throw new AppError("This email is used before", 409);
-    const checkUsername = await this.repo.findUserByUsernameSignup(
-      data.username
-    );
-    console.log(checkUsername);
-    if (checkUsername) throw new AppError("This is username is taken", 409);
-    data.password = await bcrypt.hash(
+async signup(data: signupDTO): Promise<IUser> {
+  if (!data.password) throw new AppError("Password is required", 400);
+
+  const existingEmail = await this.repo.findAnyUserByEmail(data.email);
+
+  if (existingEmail) {
+    if (existingEmail.isVerified) {
+      throw new AppError("This email is already used", 409);
+    }
+
+    const newCode = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+    const hashedPassword = await bcrypt.hash(
       data.password,
       parseInt(process.env.SALT_ROUNDS!)
     );
-    data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
-    data.codeCreatedAt = new Date(Date.now());
-    await sendMail(data.email, data.username, data.code, "code");
-    const user = await this.repo.createUser(data);
-    if (!user) throw new AppError("Error While creating the user", 500);
-    return user;
+
+    existingEmail.password = hashedPassword;
+    existingEmail.username = data.username;
+    existingEmail.code = newCode;
+    existingEmail.codeCreatedAt = new Date();
+
+    const updatedUser = await this.repo.updateUser(existingEmail);
+    if (!updatedUser) throw new AppError("Error while updating user", 500);
+
+    await sendMail(updatedUser.email, updatedUser.username, newCode, "code");
+    return updatedUser;
   }
+
+  const existingUsername = await this.repo.findAnyUserByUsername(data.username);
+  if (existingUsername) {
+    throw new AppError("This username is taken", 409);
+  }
+  // if (existingUsername) {
+  //   if (existingUsername.isVerified) {
+  //     throw new AppError("This username is taken", 409);
+  //   }
+
+  //   const newCode = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+  //   const hashedPassword = await bcrypt.hash(
+  //     data.password,
+  //     parseInt(process.env.SALT_ROUNDS!)
+  //   );
+
+  //   existingUsername.email = data.email;
+  //   existingUsername.password = hashedPassword;
+  //   existingUsername.code = newCode;
+  //   existingUsername.codeCreatedAt = new Date();
+
+  //   const updatedUser = await this.repo.updateUser(existingUsername);
+  //   if (!updatedUser) throw new AppError("Error while updating user", 500);
+
+  //   await sendMail(updatedUser.email, updatedUser.username, newCode, "code");
+  //   return updatedUser;
+  // }
+
+  const hashedPassword = await bcrypt.hash(
+    data.password,
+    parseInt(process.env.SALT_ROUNDS!)
+  );
+
+  data.password = hashedPassword;
+  data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+  data.codeCreatedAt = new Date();
+
+  const user = await this.repo.createUser(data);
+  if (!user) throw new AppError("Error while creating the user", 500);
+
+  await sendMail(user.email, user.username, data.code, "code");
+  return user;
+}
+
+
+async changeEmailInVerify(data: changeEmailInVerifyDTO): Promise<IUser> {
+  const id = data.id;
+  const newEmail = data.email;
+
+  const existingVerified = await this.repo.findVerifiedUserByEmail(newEmail);
+  if (existingVerified) throw new AppError("This email is already taken", 409);
+
+  const existingUnverified = await this.repo.findAnyUserByEmail(newEmail);
+
+  if (existingUnverified && existingUnverified.id.toString() !== id)
+  throw new AppError("This email is already pending verification by another user", 409);
+
+
+  const user = await this.repo.findUserById(id);
+  if (!user) throw new AppError("User not found", 404);
+  if (user.isVerified)
+    throw new AppError("Cannot change email after verification", 400);
+
+  const code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+  user.code = code;
+  user.codeCreatedAt = new Date(Date.now());
+  user.email = newEmail;
+
+  const updatedUser = await this.repo.updateUser(user);
+  if (!updatedUser) throw new AppError("Error while updating user", 500);
+
+  await sendMail(updatedUser.email, updatedUser.username, code, "code");
+
+  return updatedUser;
+}
+
 
   async login(data: loginDTO): Promise<String | null> {
     if (!data.username && !data.email) {
@@ -56,9 +140,9 @@ export default class AuthService {
 
     let user;
     if (data.username) {
-      user = await this.repo.findUserByUsername(data.username);
+      user = await this.repo.findVerifiedUserByUsername(data.username);
     } else if (data.email) {
-      user = await this.repo.findUserByEmail(data.email);
+      user = await this.repo.findVerifiedUserByEmail(data.email);
     }
     if (!user) {
       throw new AppError("User not found", 404);
@@ -82,7 +166,7 @@ export default class AuthService {
   }
 
   async requestOTP(data: requsetOtpDTO) {
-    const user = await this.repo.findUserByEmail(data.email);
+    const user = await this.repo.findVerifiedUserByEmail(data.email);
     if (!user) {
       throw new AppError("Account not found", 404);
     }
@@ -92,7 +176,7 @@ export default class AuthService {
     return;
   }
   async verfiyAccount(data: verifyAccountDTO) {
-    const user = await this.repo.findUserByEmailVerify(data.email);
+    const user = await this.repo.findAnyUserByEmail(data.email);
     if (!user) throw new AppError("Account Not Found", 404);
     if (user.isVerified) throw new AppError("User Is Already Verified", 409);
     if (!user.code) throw new AppError("Verfication Code is expired", 409);
@@ -112,7 +196,7 @@ export default class AuthService {
     return counter;
   }
   async forgetPassword(data: forgetPasswordDTO): Promise<IUser> {
-    const user = await this.repo.findUserByEmail(data.email);
+    const user = await this.repo.findVerifiedUserByEmail(data.email);
     if (!user) throw new AppError("Account Not Found", 404);
     if (!user.OTP) throw new AppError("OTP is expired", 409);
     const isOTPCorrect = user.OTP == (data.otp as unknown as number);
@@ -141,7 +225,7 @@ export default class AuthService {
   }
 
   async resendVerificationCode(data: resetVerficationCodeDTO) {
-    const user = await this.repo.findUserByEmailVerify(data.email);
+    const user = await this.repo.findAnyUserByEmail(data.email);
     if (!user) throw new AppError("User Not Found", 404);
     if (user.isVerified) throw new AppError("User is already verified", 409);
     data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
@@ -159,7 +243,7 @@ export default class AuthService {
     if (!payload) throw new AppError("Invalid Google token", 401);
     const { email } = payload;
     if (!email) throw new AppError("Google account must have an email", 400);
-    let user = await this.repo.findUserByEmailSignup(email);
+    let user = await this.repo.findAnyUserByEmail(email);
     if (!user) {
       const newData: signupDTO = {
         email: email,

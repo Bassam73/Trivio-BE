@@ -12,21 +12,25 @@ class AuthRepository {
 
   private constructor() {}
 
-  async findUserByEmail(email: string): Promise<IUser | null> {
+  async findVerifiedUserByEmail(email: string): Promise<IUser | null> {
     return await userModel.findOne({ email, isVerified: true });
   }
+  async findUserById(id: string): Promise<IUser | null> {
+    return await userModel.findById(id);
+  }
 
-  async findUserByEmailVerify(email: string): Promise<IUser | null> {
+ 
+  async findAnyUserByEmail(email: string): Promise<IUser | null> {
     return await userModel.findOne({ email });
   }
-  async findUserByEmailSignup(email: string): Promise<IUser | null> {
-    return await userModel.findOne({ email });
-  }
-  async findUserByUsernameSignup(username: string): Promise<IUser | null> {
+  async findAnyUserByUsername(username: string): Promise<IUser | null> {
     return await userModel.findOne({ username });
   }
-  async findUserByUsername(username: string): Promise<IUser | null> {
+  async findVerifiedUserByUsername(username: string): Promise<IUser | null> {
     return await userModel.findOne({ username, isVerified: true });
+  }
+  async updateUser(user: IUser): Promise<IUser|null> {
+    return await userModel.findByIdAndUpdate(user._id, user, { new: true });
   }
   async createUser(data: signupDTO): Promise<IUser> {
     return await userModel.create(data);
