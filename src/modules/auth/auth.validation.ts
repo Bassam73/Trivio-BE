@@ -43,6 +43,7 @@ const changePasswordVal = Joi.object({
 
 const resendVerificationCodeVal = Joi.object({
   email: Joi.string().email().required(),
+  username: Joi.string().min(3).max(20).required(),
 });
 
 const googleLoginVal = Joi.object({

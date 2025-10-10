@@ -3,8 +3,8 @@ import userModel from "../../database/models/user.model";
 import {
   forgetPasswordDTO,
   IUser,
-  resetVerficationCodeDTO,
   signupDTO,
+
 } from "../../types/user.types";
 
 class AuthRepository {
@@ -90,17 +90,17 @@ class AuthRepository {
     );
   }
 
-  async resetVerificationCode(
-    data: resetVerficationCodeDTO
-  ): Promise<IUser | null> {
-    return await userModel.findOneAndUpdate(
-      { email: data.email },
-      { code: data.code, codeCreatedAt: Date.now() },
-      {
-        new: true,
-      }
-    );
-  }
+  // async resetVerificationCode(
+  //   data: resetVerficationCodeDTO
+  // ): Promise<IUser | null> {
+  //   return await userModel.findOneAndUpdate(
+  //     { email: data.email },
+  //     { code: data.code, codeCreatedAt: Date.now() },
+  //     {
+  //       new: true,
+  //     }
+  //   );
+  // }
   static getInstance() {
     if (!AuthRepository.instance) {
       AuthRepository.instance = new AuthRepository();

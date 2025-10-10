@@ -2,11 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import catchError from "../../core/middlewares/catchError";
 import AuthService from "./auth.service";
 import {
+  ChangeEmailInVerifyDTO,
   changePasswordDTO,
   forgetPasswordDTO,
   loginDTO,
   requsetOtpDTO,
-  resetVerficationCodeDTO,
   signupDTO,
   verifyAccountDTO,
 } from "../../types/user.types";
@@ -63,8 +63,8 @@ const changePassword = catchError(
 
 const resendVerificationCode = catchError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const data: resetVerficationCodeDTO = req.body;
-    await service.resendVerificationCode(data);
+    const data: ChangeEmailInVerifyDTO = req.body;
+    await service.changeEmailInVerify(data);
     res.status(200).json({ status: "success" });
   }
 );

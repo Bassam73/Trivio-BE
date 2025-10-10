@@ -2,13 +2,12 @@ import { env, throwDeprecation } from "process";
 import AppError from "../../core/utils/AppError";
 import sendMail from "../../core/utils/mailer";
 import {
-  changeEmailInVerifyDTO,
+  ChangeEmailInVerifyDTO,
   changePasswordDTO,
   forgetPasswordDTO,
   IUser,
   loginDTO,
   requsetOtpDTO,
-  resetVerficationCodeDTO,
   signupDTO,
   verifyAccountDTO,
 } from "../../types/user.types";
@@ -55,7 +54,9 @@ async signup(data: signupDTO): Promise<IUser> {
   }
 
   const existingUsername = await this.repo.findAnyUserByUsername(data.username);
+  console.log("outside");
   if (existingUsername) {
+    console.log("inside");
     throw new AppError("This username is taken", 409);
   }
   // if (existingUsername) {
@@ -98,36 +99,34 @@ async signup(data: signupDTO): Promise<IUser> {
 }
 
 
-async changeEmailInVerify(data: changeEmailInVerifyDTO): Promise<IUser> {
-  const id = data.id;
-  const newEmail = data.email;
-
+async changeEmailInVerify(data: ChangeEmailInVerifyDTO): Promise<IUser> {
+  const { username, email: newEmail } = data;
+  if(!username || !newEmail) throw new AppError("Username and email are required", 400);
+  // console.log(username, newEmail);
   const existingVerified = await this.repo.findVerifiedUserByEmail(newEmail);
   if (existingVerified) throw new AppError("This email is already taken", 409);
 
   const existingUnverified = await this.repo.findAnyUserByEmail(newEmail);
+  if (existingUnverified && existingUnverified.username !== username)
+    throw new AppError("This email is already pending verification by another user", 409);
 
-  if (existingUnverified && existingUnverified.id.toString() !== id)
-  throw new AppError("This email is already pending verification by another user", 409);
-
-
-  const user = await this.repo.findUserById(id);
+  const user = await this.repo.findAnyUserByUsername(username);
   if (!user) throw new AppError("User not found", 404);
   if (user.isVerified)
     throw new AppError("Cannot change email after verification", 400);
 
-  const code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+  const code = Math.floor(100000 + Math.random() * 900000);
   user.code = code;
-  user.codeCreatedAt = new Date(Date.now());
+  user.codeCreatedAt = new Date();
   user.email = newEmail;
 
   const updatedUser = await this.repo.updateUser(user);
   if (!updatedUser) throw new AppError("Error while updating user", 500);
 
   await sendMail(updatedUser.email, updatedUser.username, code, "code");
-
   return updatedUser;
 }
+
 
 
   async login(data: loginDTO): Promise<String | null> {
@@ -224,15 +223,15 @@ async changeEmailInVerify(data: changeEmailInVerifyDTO): Promise<IUser> {
     return updatedUser;
   }
 
-  async resendVerificationCode(data: resetVerficationCodeDTO) {
-    const user = await this.repo.findAnyUserByEmail(data.email);
-    if (!user) throw new AppError("User Not Found", 404);
-    if (user.isVerified) throw new AppError("User is already verified", 409);
-    data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
-    const updatedUser = await this.repo.resetVerificationCode(data);
-    if (!updatedUser) throw new AppError("Error While Updating User Data", 500);
-    await sendMail(updatedUser.email, updatedUser.username, data.code, "code");
-  }
+  // async resendVerificationCode(data: resetVerficationCodeDTO) {
+  //   const user = await this.repo.findAnyUserByEmail(data.email);
+  //   if (!user) throw new AppError("User Not Found", 404);
+  //   if (user.isVerified) throw new AppError("User is already verified", 409);
+  //   data.code = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+  //   const updatedUser = await this.repo.resetVerificationCode(data);
+  //   if (!updatedUser) throw new AppError("Error While Updating User Data", 500);
+  //   await sendMail(updatedUser.email, updatedUser.username, data.code, "code");
+  // }
 
   async googleLogin(idToken: string): Promise<string> {
     const ticket = await client.verifyIdToken({

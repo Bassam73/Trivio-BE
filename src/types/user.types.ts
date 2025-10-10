@@ -48,12 +48,8 @@ export interface changePasswordDTO {
   newPassword: string;
 }
 
-export interface resetVerficationCodeDTO {
+export interface ChangeEmailInVerifyDTO {
   email: string;
+  username: string;
   code?: number;
-}
-
-export interface changeEmailInVerifyDTO {
-  email: string;
-  id: string;
 }
