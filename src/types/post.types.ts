@@ -10,4 +10,12 @@ export interface IPost {
   location: string; // Profile Or group
   groupID?: mongoose.Types.ObjectId;
   views?: number;
+  reactionCounts: {
+    like: number;
+    love: number;
+    haha: number;
+    wow: number;
+    sad: number;
+    angry: number;
+  };
 }
