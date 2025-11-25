@@ -12,6 +12,10 @@ export interface IUser extends Document {
   OTP?: number;
   OTPCreatedAt?: Date;
   isPremium: boolean;
+  following?: number;
+  followers?: number;
+  posts?: number;
+  favTeams?: [string];
 }
 
 export interface signupDTO {

@@ -54,6 +54,21 @@ const schema: Schema<IUser> = new Schema<IUser>(
     OTPCreatedAt: {
       type: Date,
     },
+    following: {
+      type: Number,
+      default: 0,
+    },
+    followers: {
+      type: Number,
+      default: 0,
+    },
+    posts: {
+      type: Number,
+      default: 0,
+    },
+    favTeams: {
+      type: [String],
+    },
   },
   {
     timestamps: true,
