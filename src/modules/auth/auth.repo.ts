@@ -1,11 +1,6 @@
 import { DeleteResult, UpdateResult } from "mongoose";
 import userModel from "../../database/models/user.model";
-import {
-  forgetPasswordDTO,
-  IUser,
-  signupDTO,
-
-} from "../../types/user.types";
+import { forgetPasswordDTO, IUser, signupDTO } from "../../types/user.types";
 
 class AuthRepository {
   private static instance: AuthRepository;
@@ -19,7 +14,6 @@ class AuthRepository {
     return await userModel.findById(id);
   }
 
- 
   async findAnyUserByEmail(email: string): Promise<IUser | null> {
     return await userModel.findOne({ email });
   }
@@ -29,7 +23,7 @@ class AuthRepository {
   async findVerifiedUserByUsername(username: string): Promise<IUser | null> {
     return await userModel.findOne({ username, isVerified: true });
   }
-  async updateUser(user: IUser): Promise<IUser|null> {
+  async updateUser(user: IUser): Promise<IUser | null> {
     return await userModel.findByIdAndUpdate(user._id, user, { new: true });
   }
   async createUser(data: signupDTO): Promise<IUser> {
@@ -88,6 +82,16 @@ class AuthRepository {
       },
       { new: true }
     );
+  }
+
+  async getMentionedUsers(usernames: string[]): Promise<IUser[]> {
+    return await userModel
+      .find({
+        username: {
+          $in: usernames,
+        },
+      })
+      .select("_id username");
   }
 
   // async resetVerificationCode(

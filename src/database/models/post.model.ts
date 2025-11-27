@@ -4,7 +4,7 @@ import { IPost } from "../../types/post.types";
 const schema: Schema<IPost> = new Schema<IPost>({
   caption: {
     type: String,
-    required: true,
+    trim: true,
   },
   authorID: {
     type: mongoose.Schema.Types.ObjectId,
@@ -16,10 +16,17 @@ const schema: Schema<IPost> = new Schema<IPost>({
     required: true,
     enum: ["public", "private"],
   },
-  mentions: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: "user",
-  },
+  mentions: [
+    {
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "user",
+      },
+      username: {
+        type: String,
+      },
+    },
+  ],
   media: {
     type: [String],
   },
@@ -40,6 +47,10 @@ const schema: Schema<IPost> = new Schema<IPost>({
     type: Number,
     default: 0,
   },
+  flagged: {
+    type: Boolean,
+    default: false,
+  },
   reactionCounts: {
     like: { type: Number, default: 0 },
     love: { type: Number, default: 0 },
@@ -50,5 +61,5 @@ const schema: Schema<IPost> = new Schema<IPost>({
   },
 });
 
-const postModel = new mongoose.Model("post", schema);
+const postModel = mongoose.model("post", schema);
 export default postModel;
