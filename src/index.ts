@@ -5,10 +5,12 @@ import AppError from "./core/utils/AppError";
 import bootstrap from "./modules/index.router";
 import startAllCrons from "./config/cron";
 import cors from "cors";
+import redisConnection from "./config/redis";
 env.config();
 
 const app = express();
 dbConnection();
+redisConnection();
 app.use(express.json());
 app.use(
   cors({
