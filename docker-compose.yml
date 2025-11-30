@@ -1,0 +1,55 @@
+services:
+  trivio-redis:
+    image: redis:alpine
+    container_name: trivio_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - trivio-net
+
+  trivio-mongo:
+    image: mongo:6.0
+    container_name: trivio_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - trivio-net
+
+  trivio-api:
+    build: .
+    container_name: trivio_backend
+    restart: on-failure
+    ports:
+      - "3500:3500"
+    environment:
+      - REDIS_HOST=trivio-redis
+      - REDIS_PORT=6379
+
+      - MONGO_URI=mongodb://trivio-mongo:27017/trivio
+
+      - PORT=3500
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./uploads:/app/uploads
+      - /app/node_modules
+    command: npm run docker
+    depends_on:
+      - trivio-redis
+      - trivio-mongo
+    networks:
+      - trivio-net
+
+volumes:
+  redis_data:
+  mongo_data:
+networks:
+  trivio-net:
+    driver: bridge

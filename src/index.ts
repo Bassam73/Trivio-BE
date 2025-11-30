@@ -5,14 +5,18 @@ import AppError from "./core/utils/AppError";
 import bootstrap from "./modules/index.router";
 import startAllCrons from "./config/cron";
 import cors from "cors";
+import redisConnection from "./config/redis";
 env.config();
 
 const app = express();
 dbConnection();
+redisConnection();
 app.use(express.json());
-app.use(cors({
-  origin: '*',
-}));
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
 bootstrap(app);
 startAllCrons();
@@ -25,7 +29,7 @@ app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server is running on http://0.0.0.0:${PORT}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
