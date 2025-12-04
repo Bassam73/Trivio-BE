@@ -5,6 +5,7 @@ export enum PostType {
   private = "private",
 }
 export interface IPost {
+  _id?: string;
   caption?: string;
   authorID: mongoose.Types.ObjectId;
   type: string; //public or private

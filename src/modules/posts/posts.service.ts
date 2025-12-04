@@ -12,6 +12,7 @@ import PostRepository from "./posts.repo";
 import axios from "axios";
 import fs from "fs";
 import getMentionedUsers from "../../core/utils/mentionedUsers";
+import filterQueue from "../../jobs/queues/filterQueue";
 
 export default class PostService {
   private static instance: PostService;
@@ -21,18 +22,15 @@ export default class PostService {
     this.repo = repo;
     this.userRepo = userRepo;
   }
-  async checkToxicity(caption: string): Promise<ToxicityFlags> {
-    let result: ToxicityFlags;
-    const response = await axios.post(
-      process.env.TOXICITY_MODEL_URL as string,
-      { text: caption }
-    );
-    const dataString = JSON.stringify(response.data);
-    if (dataString.includes("Safe")) result = ToxicityFlags.safe;
-    else if (dataString.includes("BLOCKED")) result = ToxicityFlags.blocked;
-    else result = ToxicityFlags.flagged;
-
-    return result;
+  async checkToxicity(flag: ToxicityFlags, id: string): Promise<void> {
+    if (flag == ToxicityFlags.blocked) {
+      await this.repo.deletePostById(id);
+      return;
+    }
+    if (flag == ToxicityFlags.flagged) {
+      await this.repo.updatePostById(id, { flagged: true });
+      return;
+    }
   }
   async createPost(data: createPostDTO) {
     console.time("Total Logic Time");
@@ -43,16 +41,6 @@ export default class PostService {
         console.time("Mentions ");
         const mentions: IUser[] | null = await getMentionedUsers(caption);
         console.timeEnd("Mentions ");
-
-        console.time("Toxicity Check");
-        const filter: ToxicityFlags = await this.checkToxicity(caption);
-        console.timeEnd("Toxicity Check");
-
-        if (filter == ToxicityFlags.blocked)
-          throw new AppError("the post is blocked because of its content", 400);
-
-        if (filter == ToxicityFlags.flagged) data.flagged = true;
-
         if (mentions) {
           data.mentions = mentions;
         }
@@ -60,6 +48,11 @@ export default class PostService {
       data.location = "profile";
       console.time("DB Save");
       const post = await this.repo.createPost(data);
+      if (data.caption)
+        filterQueue.add("check-filter", {
+          postID: post._id as string,
+          caption: data.caption,
+        });
       console.timeEnd("DB Save");
       console.timeEnd("Total Logic Time");
 
@@ -126,19 +119,15 @@ export default class PostService {
         type: data.updatedData.type,
       });
     }
-    const filter = await this.checkToxicity(data.updatedData.caption);
-
-    if (filter == ToxicityFlags.blocked)
-      throw new AppError(
-        "the updated post is blocked because of its content",
-        400
-      );
-
+    filterQueue.add("check-filter", {
+      postID: data.postID.toString(),
+      caption: data.updatedData.caption,
+    });
     const updates: any = {
       caption: data.updatedData.caption,
       type: data.updatedData.type,
       mentions: await getMentionedUsers(data.updatedData.caption),
-      flagged: filter == ToxicityFlags.flagged,
+      flagged: ToxicityFlags.safe,
     };
     return await this.repo.updatePostById(data.postID.toString(), updates);
   }
