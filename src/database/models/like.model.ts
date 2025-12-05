@@ -1,26 +1,48 @@
-import mongoose, { mongo, Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { ILike } from "../../types/like.types";
 
-const schema: Schema<ILike> = new Schema<ILike>({
-  user: {
-    type: Schema.Types.ObjectId,
-    required: true,
-    ref: "user",
-  },
-  postId: {
-    type: Schema.Types.ObjectId,
-    ref: "post",
-  },
-  commentId: {
-    type: Schema.Types.ObjectId,
-    ref: "comment",
-  },
-  react_type: {
-    type: String,
-    required: true,
-    enum: ["like", "love", "haha", "wow", "sad", "angry"], // temp
-  },
-});
+const likeSchema = new Schema<ILike>(
+  {
+    user: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
 
-const likeModel = new mongoose.Model("like", schema);
+    postId: {
+      type: Schema.Types.ObjectId,
+      ref: "Post",
+    },
+
+    commentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Comment",
+    },
+
+    react_type: {
+      type: String,
+      required: true,
+      enum: ["like", "love", "haha", "wow", "sad", "angry"],
+    },
+  },
+  { timestamps: true }
+);
+
+likeSchema.index(
+  { user: 1, postId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { postId: { $exists: true } },
+  }
+);
+
+likeSchema.index(
+  { user: 1, commentId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { commentId: { $exists: true } },
+  }
+);
+
+const likeModel = mongoose.model("Like", likeSchema);
 export default likeModel;

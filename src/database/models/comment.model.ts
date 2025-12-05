@@ -21,6 +21,14 @@ const schema: Schema<IComment> = new Schema<IComment>({
   text: {
     type: String,
   },
+  reactionCounts: {
+    like: { type: Number, default: 0 },
+    love: { type: Number, default: 0 },
+    haha: { type: Number, default: 0 },
+    wow: { type: Number, default: 0 },
+    sad: { type: Number, default: 0 },
+    angry: { type: Number, default: 0 },
+  },
 });
 
 const commentModel = new mongoose.Model("like", schema);

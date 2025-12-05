@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 export interface IPost {
+  _id?: mongoose.Types.ObjectId;
   caption: string;
   authorID: mongoose.Types.ObjectId;
   type: string; //public or private
