@@ -9,8 +9,9 @@ const storage = multer.diskStorage({
     if (req.baseUrl.includes("posts")) {
       console.log(__dirname);
       uploadPath = path.join(__dirname, "../../../uploads/posts");
+    } else if (req.baseUrl.includes("groups")) {
+      uploadPath = path.join(__dirname, "../../../uploads/groups");
     }
-
     fs.mkdirSync(uploadPath, { recursive: true });
 
     cb(null, uploadPath);
