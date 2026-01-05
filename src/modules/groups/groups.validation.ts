@@ -22,3 +22,8 @@ export const updateGroupVal = Joi.object({
   logo: Joi.string(),
   tags: Joi.array().items(Joi.string()),
 });
+
+export const paramsRequestIdVal = Joi.object({
+  id: Joi.string().hex().length(24).required(),
+  requestId: Joi.string().hex().length(24).required(),
+});

@@ -1,17 +1,24 @@
 import express from "express";
 import valid from "express-joi-validation";
 import {
-  createGroupVal,
-  paramsIdVal,
-  updateGroupVal,
-} from "./groups.validation";
-import {
   createGroup,
   deleteGroup,
   getGroupById,
   getGroups,
   updateGroup,
-} from "./groups.controller";
+  joinGroup,
+  leaveGroup,
+  getGroupRequests,
+  acceptJoinRequest,
+  declineJoinRequest,
+  cancelJoinRequest,
+} from "./groups.controller"; 
+import {
+  createGroupVal,
+  paramsIdVal,
+  updateGroupVal,
+  paramsRequestIdVal,
+} from "./groups.validation";
 import upload from "../../core/utils/upload";
 import protectedRoutes from "../../core/middlewares/protectedRoutes";
 
@@ -35,9 +42,42 @@ groupRouter
   .patch(
     protectedRoutes,
     validator.params(paramsIdVal),
-    validator.body(updateGroupVal),
     upload.single("logo"),
+    validator.body(updateGroupVal),
     updateGroup
+  );
+
+
+groupRouter
+  .route("/:id/join")
+  .post(protectedRoutes, validator.params(paramsIdVal), joinGroup);
+
+groupRouter
+  .route("/:id/leave")
+  .delete(protectedRoutes, validator.params(paramsIdVal), leaveGroup);
+
+groupRouter
+  .route("/:id/requests")
+  .get(protectedRoutes, validator.params(paramsIdVal), getGroupRequests);
+
+groupRouter
+  .route("/:id/requests/cancel")
+  .delete(protectedRoutes, validator.params(paramsIdVal), cancelJoinRequest);
+
+groupRouter
+  .route("/:id/requests/:requestId/accept")
+  .post(
+    protectedRoutes,
+    validator.params(paramsRequestIdVal),
+    acceptJoinRequest
+  );
+
+groupRouter
+  .route("/:id/requests/:requestId/decline")
+  .post(
+    protectedRoutes,
+    validator.params(paramsRequestIdVal),
+    declineJoinRequest
   );
 
 export default groupRouter;

@@ -65,3 +65,34 @@ export const getGroups = catchError(async (req: Request, res: Response) => {
     },
   });
 });
+
+
+export const joinGroup = catchError(async (req: Request, res: Response) => {
+  const result = await service.joinGroup(req.params.id, req.user?._id as string);
+  res.status(200).json({ status: "success", message: result });
+});
+
+export const leaveGroup = catchError(async (req: Request, res: Response) => {
+  await service.leaveGroup(req.params.id, req.user?._id as string);
+  res.status(200).json({ status: "success", message: "Left group successfully" });
+});
+
+export const getGroupRequests = catchError(async (req: Request, res: Response) => {
+  const { data, page } = await service.getGroupRequests(req.params.id, req.user?._id as string, req.query);
+  res.status(200).json({ status: "success", data: { data, page } });
+});
+
+export const acceptJoinRequest = catchError(async (req: Request, res: Response) => {
+  await service.acceptJoinRequest(req.params.id, req.user?._id as string, req.params.requestId);
+  res.status(200).json({ status: "success", message: "Request accepted" });
+});
+
+export const declineJoinRequest = catchError(async (req: Request, res: Response) => {
+  await service.declineJoinRequest(req.params.id, req.user?._id as string, req.params.requestId);
+  res.status(200).json({ status: "success", message: "Request declined" });
+});
+
+export const cancelJoinRequest = catchError(async (req: Request, res: Response) => {
+  await service.cancelJoinRequest(req.params.id, req.user?._id as string);
+  res.status(200).json({ status: "success", message: "Request cancelled" });
+});

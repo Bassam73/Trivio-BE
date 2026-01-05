@@ -30,5 +30,8 @@ const schema: Schema<IGroupMember> = new Schema<IGroupMember>(
   }
 );
 
+schema.index({ groupId: 1, userId: 1 }, { unique: true });
+
+
 const groupMemberModel =  mongoose.model("groupMember", schema);
 export default groupMemberModel;
