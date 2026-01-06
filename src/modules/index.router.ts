@@ -1,6 +1,7 @@
 import { Application } from "express";
 import authRouter from "./auth/auth.routes";
 import postsRouter from "./posts/posts.routes";
+import groupRouter from "./groups/groups.routes";
 
 export default function bootstrap(app: Application) {
   app.get("/", (req, res) => {
@@ -8,4 +9,5 @@ export default function bootstrap(app: Application) {
   });
   app.use("/api/v1/auth", authRouter);
   app.use("/api/v1/posts", postsRouter);
+  app.use("/api/v1/groups", groupRouter);
 }

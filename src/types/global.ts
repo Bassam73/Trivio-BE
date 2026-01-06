@@ -7,3 +7,8 @@ declare global {
     }
   }
 }
+
+export interface PaginationResult<T> {
+  data: T[];
+  page: number;
+}
