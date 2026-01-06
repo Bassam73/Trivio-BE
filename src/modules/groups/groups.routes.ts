@@ -12,12 +12,23 @@ import {
   acceptJoinRequest,
   declineJoinRequest,
   cancelJoinRequest,
+  promoteMember,
+  demoteMember,
+  kickMember,
+  banMember,
+  unbanMember,
+  getBannedUsers,
+  getGroupMembers,
+  getGroupAdmins,
+  getGroupModerators,
 } from "./groups.controller"; 
 import {
   createGroupVal,
   paramsIdVal,
   updateGroupVal,
   paramsRequestIdVal,
+  changeMemberRoleVal,
+  memberActionVal,
 } from "./groups.validation";
 import upload from "../../core/utils/upload";
 import protectedRoutes from "../../core/middlewares/protectedRoutes";
@@ -79,5 +90,16 @@ groupRouter
     validator.params(paramsRequestIdVal),
     declineJoinRequest
   );
+
+groupRouter.post("/:id/promote", protectedRoutes, validator.params(paramsIdVal), validator.body(changeMemberRoleVal), promoteMember);
+groupRouter.post("/:id/demote", protectedRoutes, validator.params(paramsIdVal), validator.body(changeMemberRoleVal), demoteMember);
+groupRouter.post("/:id/kick", protectedRoutes, validator.params(paramsIdVal), validator.body(memberActionVal), kickMember);
+groupRouter.post("/:id/ban", protectedRoutes, validator.params(paramsIdVal), validator.body(memberActionVal), banMember);
+groupRouter.post("/:id/unban", protectedRoutes, validator.params(paramsIdVal), validator.body(memberActionVal), unbanMember);
+
+groupRouter.get("/:id/members", protectedRoutes, validator.params(paramsIdVal), getGroupMembers);
+groupRouter.get("/:id/admins", protectedRoutes, validator.params(paramsIdVal), getGroupAdmins);
+groupRouter.get("/:id/moderators", protectedRoutes, validator.params(paramsIdVal), getGroupModerators);
+groupRouter.get("/:id/banned", protectedRoutes, validator.params(paramsIdVal), getBannedUsers);
 
 export default groupRouter;

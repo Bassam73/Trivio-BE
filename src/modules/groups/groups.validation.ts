@@ -27,3 +27,12 @@ export const paramsRequestIdVal = Joi.object({
   id: Joi.string().hex().length(24).required(),
   requestId: Joi.string().hex().length(24).required(),
 });
+
+export const changeMemberRoleVal = Joi.object({
+  targetUserId: Joi.string().hex().length(24).required(),
+  newRole: Joi.string().valid("admin", "moderator", "member").required(),
+});
+
+export const memberActionVal = Joi.object({
+  targetUserId: Joi.string().hex().length(24).required(),
+});

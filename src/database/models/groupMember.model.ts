@@ -23,6 +23,14 @@ const schema: Schema<IGroupMember> = new Schema<IGroupMember>(
       required: true,
       enum: ["active", "banned"],
     },
+    kicksCount: {
+      type: Number,
+      default: 0,
+    },
+    lastKickReset: {
+      type: Date,
+      default: Date.now,
+    },
     
   },
   {

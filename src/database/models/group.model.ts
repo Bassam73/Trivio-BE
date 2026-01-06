@@ -28,6 +28,10 @@ const schema: Schema<IGroup> = new Schema<IGroup>(
       type: Number,
       default: 0,
     },
+    moderators: {
+      type: Number,
+      default: 0,
+    },
     creatorId: {
       type: Schema.Types.ObjectId,
       required: true,

@@ -23,6 +23,7 @@ export interface IGroup extends Document {
   logo?: string;
   members: number;
   admins: number;
+  moderators: number;
   privacy: GroupPrivacy;
   creatorId: mongoose.Types.ObjectId;
   tags?: string[];
@@ -33,6 +34,8 @@ export interface IGroupMember {
   userId: mongoose.Types.ObjectId;
   role: GroupRole;
   status: GroupStatus;
+  kicksCount: number;
+  lastKickReset: Date;
 }
 
 export interface IJoinRequest {
@@ -60,4 +63,15 @@ export interface updateGroupDTO {
   };
   postId: string;
   userID: string;
+}
+
+export interface changeMemberRoleDTO {
+  groupId: string;
+  targetUserId: string;
+  newRole: GroupRole;
+}
+
+export interface memberActionDTO {
+  groupId: string;
+  targetUserId: string;
 }

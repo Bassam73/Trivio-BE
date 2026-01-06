@@ -40,6 +40,12 @@ describe("GroupService", () => {
       deleteJoinRequest: jest.fn(),
       deleteJoinRequestByGroupAndUser: jest.fn(),
       getGroupRequests: jest.fn(),
+      getMember: jest.fn(),
+      updateMemberRole: jest.fn(),
+      updateMemberStatus: jest.fn(),
+      incrementKickCount: jest.fn(),
+      resetKickCount: jest.fn(),
+      getMembers: jest.fn(),
     } as unknown as jest.Mocked<GroupRepository>;
 
     // Hijack the singleton instance of repo used by service
@@ -260,6 +266,214 @@ describe("GroupService", () => {
     it("should throw error if not admin", async () => {
         repoMock.checkMemberRole.mockResolvedValue("member");
         await expect(service.acceptJoinRequest(groupId, adminId, requestId)).rejects.toThrow("authorized");
+    });
+  });
+  describe("Group Administration", () => {
+    const groupId = "group123";
+    const creatorId = "creator123";
+    const adminId = "admin123";
+    const modId = "mod123";
+    const memberId = "member123";
+    const targetId = "target123";
+
+    beforeEach(() => {
+        repoMock.getGroupById.mockResolvedValue({ 
+            _id: groupId, 
+            creatorId,
+            updateOne: jest.fn()
+        } as any);
+    });
+
+    describe("promoteMember", () => {
+        it("should allow creator to promote member to admin", async () => {
+            repoMock.getMember.mockResolvedValue({ role: "member", status: "active" } as any);
+            
+            await service.promoteMember({ groupId, targetUserId: targetId, newRole: "admin" } as any, creatorId);
+
+            expect(repoMock.updateMemberRole).toHaveBeenCalledWith(groupId, targetId, "admin");
+        });
+
+        it("should allow admin to promote member to moderator", async () => {
+             repoMock.getMember.mockResolvedValue({ role: "member", status: "active" } as any);
+             repoMock.checkMemberRole.mockResolvedValue("admin");
+
+             await service.promoteMember({ groupId, targetUserId: targetId, newRole: "moderator" } as any, adminId);
+
+             expect(repoMock.updateMemberRole).toHaveBeenCalledWith(groupId, targetId, "moderator");
+             const groupMock = await repoMock.getGroupById(groupId);
+             expect(groupMock!.updateOne).toHaveBeenCalledWith({ $inc: { moderators: 1 } });
+        });
+
+        it("should prevent admin from promoting to admin", async () => {
+             repoMock.getMember.mockResolvedValue({ role: "member", status: "active" } as any);
+             repoMock.checkMemberRole.mockResolvedValue("admin");
+
+             await expect(service.promoteMember({ groupId, targetUserId: targetId, newRole: "admin" } as any, adminId))
+                .rejects.toThrow("Admins can only promote to Moderator");
+        });
+
+        it("should prevent promotion to same role", async () => {
+             repoMock.getMember.mockResolvedValue({ role: "member", status: "active" } as any);
+             
+             await expect(service.promoteMember({ groupId, targetUserId: targetId, newRole: "member" } as any, creatorId))
+                .rejects.toThrow("Promotion must be to a higher role");
+        });
+
+        it("should prevent promotion to lower role", async () => {
+             repoMock.getMember.mockResolvedValue({ role: "moderator", status: "active" } as any);
+             
+             await expect(service.promoteMember({ groupId, targetUserId: targetId, newRole: "member" } as any, creatorId))
+                .rejects.toThrow("Promotion must be to a higher role");
+        });
+    });
+
+    describe("demoteMember", () => {
+        it("should allow creator to demote anyone (except self)", async () => {
+             repoMock.getMember.mockResolvedValue({ role: "admin", status: "active" } as any);
+
+             // Demote admin to moderator
+             await service.demoteMember({ groupId, targetUserId: adminId, newRole: "moderator" } as any, creatorId);
+
+             expect(repoMock.updateMemberRole).toHaveBeenCalledWith(groupId, adminId, "moderator");
+             const groupMock = await repoMock.getGroupById(groupId);
+             expect(groupMock!.updateOne).toHaveBeenCalledWith({ $inc: { moderators: 1 } });
+        });
+
+        it("should prevent demotion to same role", async () => {
+             repoMock.getMember.mockResolvedValue({ role: "moderator", status: "active" } as any);
+             
+             await expect(service.demoteMember({ groupId, targetUserId: modId, newRole: "moderator" } as any, creatorId))
+                .rejects.toThrow("Demotion must be to a lower role");
+        });
+
+        it("should prevent demotion to higher role", async () => {
+             repoMock.getMember.mockResolvedValue({ role: "member", status: "active" } as any);
+             
+             await expect(service.demoteMember({ groupId, targetUserId: modId, newRole: "moderator" } as any, creatorId))
+                .rejects.toThrow("Demotion must be to a lower role");
+        });
+
+        it("should allow admin to demote moderator", async () => {
+             repoMock.getMember.mockResolvedValue({ role: "moderator", status: "active" } as any);
+             repoMock.checkMemberRole.mockResolvedValue("admin");
+
+             await service.demoteMember({ groupId, targetUserId: modId, newRole: "member" } as any, adminId);
+             
+             expect(repoMock.updateMemberRole).toHaveBeenCalledWith(groupId, modId, "member");
+             const groupMock = await repoMock.getGroupById(groupId);
+             expect(groupMock!.updateOne).toHaveBeenCalledWith({ $inc: { moderators: -1 } });
+        });
+
+        it("should prevent admin from demoting admin", async () => {
+             repoMock.getMember.mockResolvedValue({ role: "admin", status: "active" } as any);
+             repoMock.checkMemberRole.mockResolvedValue("admin");
+
+             await expect(service.demoteMember({ groupId, targetUserId: adminId, newRole: "member" } as any, "otherAdminId"))
+                 .rejects.toThrow("Admins cannot demote other Admins");
+        });
+    });
+
+    describe("unbanMember", () => {
+        it("should allow admin to unban banned user", async () => {
+            repoMock.checkMemberRole.mockResolvedValue("admin");
+            repoMock.getMember.mockResolvedValue({ role: "member", status: "banned" } as any);
+
+            await service.unbanMember({ groupId, targetUserId: targetId } as any, adminId);
+
+            expect(repoMock.updateMemberStatus).toHaveBeenCalledWith(groupId, targetId, "active");
+            expect(repoMock.updateMemberCount).toHaveBeenCalledWith(groupId, 1);
+            expect(repoMock.updateMemberRole).toHaveBeenCalledWith(groupId, targetId, "member");
+        });
+
+        it("should fail if user is not banned", async () => {
+             repoMock.checkMemberRole.mockResolvedValue("admin");
+             repoMock.getMember.mockResolvedValue({ role: "member", status: "active" } as any);
+
+             await expect(service.unbanMember({ groupId, targetUserId: targetId } as any, adminId))
+                .rejects.toThrow("User is not banned");
+        });
+
+        it("should fail if requester is not admin/creator", async () => {
+             repoMock.checkMemberRole.mockResolvedValue("member");
+             repoMock.getMember.mockResolvedValue({ role: "member", status: "banned" } as any);
+              // creatorId check is in service, mock group to have different creator
+             const groupMock = await repoMock.getGroupById(groupId);
+            (groupMock as any).creatorId = "otherCreator";
+
+             await expect(service.unbanMember({ groupId, targetUserId: targetId } as any, memberId))
+                .rejects.toThrow("Only Admins and Creator can unban");
+        });
+    });
+
+    describe("kickMember", () => {
+        it("should allow moderator to kick member within rate limit", async () => {
+            repoMock.getMember.mockImplementation((gid, uid) => {
+                if (uid === modId) return Promise.resolve({ role: "moderator", kicksCount: 0, lastKickReset: new Date() } as any);
+                if (uid === targetId) return Promise.resolve({ role: "member" } as any);
+                return Promise.resolve(null);
+            });
+
+            await service.kickMember({ groupId, targetUserId: targetId } as any, modId);
+
+            expect(repoMock.removeMember).toHaveBeenCalledWith(groupId, targetId);
+            expect(repoMock.incrementKickCount).toHaveBeenCalledWith(groupId, modId);
+        });
+
+        it("should prevent moderator from kicking admin", async () => {
+            repoMock.getMember.mockImplementation((gid, uid) => {
+                if (uid === modId) return Promise.resolve({ role: "moderator", kicksCount: 0 } as any);
+                if (uid === targetId) return Promise.resolve({ role: "admin" } as any);
+                return Promise.resolve(null);
+            });
+
+            await expect(service.kickMember({ groupId, targetUserId: targetId } as any, modId))
+                .rejects.toThrow("Moderators can only kick members");
+        });
+
+        it("should enforce kick rate limit for moderator", async () => {
+             repoMock.getMember.mockImplementation((gid, uid) => {
+                if (uid === modId) return Promise.resolve({ role: "moderator", kicksCount: 5, lastKickReset: new Date() } as any); // Reset just now
+                if (uid === targetId) return Promise.resolve({ role: "member" } as any);
+                return Promise.resolve(null);
+            });
+
+            await expect(service.kickMember({ groupId, targetUserId: targetId } as any, modId))
+                .rejects.toThrow("Kick limit reached");
+        });
+
+        it("should reset kick count after one hour", async () => {
+             const twoHoursAgo = new Date(Date.now() - 7200000);
+             repoMock.getMember.mockImplementation((gid, uid) => {
+                if (uid === modId) return Promise.resolve({ role: "moderator", kicksCount: 5, lastKickReset: twoHoursAgo } as any);
+                if (uid === targetId) return Promise.resolve({ role: "member" } as any);
+                return Promise.resolve(null);
+            });
+
+            await service.kickMember({ groupId, targetUserId: targetId } as any, modId);
+            
+            expect(repoMock.resetKickCount).toHaveBeenCalledWith(groupId, modId);
+            expect(repoMock.removeMember).toHaveBeenCalled();
+        });
+    });
+
+    describe("banMember", () => {
+        it("should allow admin to ban member", async () => {
+            repoMock.checkMemberRole.mockResolvedValue("admin");
+            repoMock.getMember.mockResolvedValue({ role: "member", status: "active" } as any);
+
+            await service.banMember({ groupId, targetUserId: targetId } as any, adminId);
+
+            expect(repoMock.updateMemberStatus).toHaveBeenCalledWith(groupId, targetId, "banned");
+            expect(repoMock.updateMemberCount).toHaveBeenCalledWith(groupId, -1);
+        });
+
+        it("should prevent admin from banning other admin", async () => {
+             repoMock.checkMemberRole.mockResolvedValue("admin");
+             repoMock.getMember.mockResolvedValue({ role: "admin", status: "active" } as any);
+
+             await expect(service.banMember({ groupId, targetUserId: targetId } as any, adminId))
+                .rejects.toThrow("Admins cannot ban other Admins");
+        });
     });
   });
 });

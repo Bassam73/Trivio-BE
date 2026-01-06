@@ -110,6 +110,59 @@ export default class GroupRepository {
     return await joinRequestModel.findOneAndDelete({ groupId, userId });
   }
 
+  async updateMemberRole(groupId: string, userId: string, role: string): Promise<IGroupMember | null> {
+    return await groupMemberModel.findOneAndUpdate(
+      { groupId, userId },
+      { role },
+      { new: true }
+    );
+  }
+
+  async updateMemberStatus(groupId: string, userId: string, status: string): Promise<IGroupMember | null> {
+    return await groupMemberModel.findOneAndUpdate(
+      { groupId, userId },
+      { status },
+      { new: true }
+    );
+  }
+
+  async incrementKickCount(groupId: string, userId: string): Promise<IGroupMember | null> {
+    return await groupMemberModel.findOneAndUpdate(
+        { groupId, userId },
+        { $inc: { kicksCount: 1 } },
+        { new: true }
+    );
+  }
+
+  async resetKickCount(groupId: string, userId: string): Promise<IGroupMember | null> {
+      return await groupMemberModel.findOneAndUpdate(
+          { groupId, userId },
+          { kicksCount: 0, lastKickReset: Date.now() },
+          { new: true }
+      );
+  }
+
+  async getMember(groupId: string, userId: string): Promise<IGroupMember | null> {
+      return await groupMemberModel.findOne({ groupId, userId });
+  }
+
+  async getMembers(groupId: string, searchQuery: any, role?: string, status?: string): Promise<PaginationResult<IGroupMember>> {
+      const filter: any = { groupId };
+      if (role) filter.role = role;
+      if (status) filter.status = status;
+
+      const apiFeatures = new ApiFeatures<IGroupMember>(
+          groupMemberModel.find(filter).populate("userId", "name email"),
+          searchQuery
+      ).pagination(10); // Default limit
+
+      const result: PaginationResult<IGroupMember> = {
+          data: await apiFeatures.getQuery(),
+          page: apiFeatures.getPageNumber(),
+      };
+      return result;
+  }
+
   async getGroupRequests(groupId: string, searchQuery: any): Promise<PaginationResult<IJoinRequest>> {
     const apiFeatures = new ApiFeatures<IJoinRequest>(
       joinRequestModel.find({ groupId, status: "pending" }).populate("userId", "name email"), 
