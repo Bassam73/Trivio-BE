@@ -6,7 +6,7 @@ import {
   paramsIdVal,
   updatePostByIdVal,
 } from "./posts.validation";
-import upload from "../../core/utils/upload";
+import { uploadMedia } from "../../core/utils/upload";
 import {
   createPost,
   deletePostById,
@@ -25,7 +25,7 @@ postsRouter
   .post(
     protectedRoutes,
     validator.body(createPostVal),
-    upload.fields([{ name: "media", maxCount: 10 }]),
+    uploadMedia.fields([{ name: "media", maxCount: 10 }]),
     createPost
   );
 postsRouter

@@ -18,7 +18,12 @@ const createPost = catchError(
     const files = req.files as { media?: Express.Multer.File[] };
     if (files?.media && files.media.length > 0) {
       console.log("we are in files");
-      data.media = files.media.map((media) => media.filename);
+      data.media = files.media.map(
+        (media) =>
+          `${process.env.BASE_URL || "http://localhost:3500"}/uploads/posts/${
+            media.filename
+          }`
+      );
     }
 
     data.authorID = req.user?.id;

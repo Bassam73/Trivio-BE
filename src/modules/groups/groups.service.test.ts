@@ -63,7 +63,7 @@ describe("GroupService", () => {
       description: "Desc",
       privacy: "public",
       creatorId: "user123",
-      logo: "logo.png",
+      logo: "http://localhost:3500/uploads/groups/logo.png",
     } as any;
 
     const mockGroup = { _id: "group123", ...mockData };
@@ -90,7 +90,7 @@ describe("GroupService", () => {
   describe("deleteGroup", () => {
     const groupId = "group123";
     const userId = "user123";
-    const mockGroup = { _id: groupId, creatorId: userId, logo: "logo.png" };
+    const mockGroup = { _id: groupId, creatorId: userId, logo: "http://localhost:3500/uploads/groups/logo.png" };
 
     it("should delete group and associated data if authorized", async () => {
       repoMock.getGroupById.mockResolvedValue(mockGroup as any);
@@ -155,9 +155,9 @@ describe("GroupService", () => {
     const updateData: updateGroupDTO = {
         postId: "group123",
         userID: "user123",
-        data: { name: "New Name", logo: "newlogo.png" }
+        data: { name: "New Name", logo: "http://localhost:3500/uploads/groups/newlogo.png" }
     };
-    const mockGroup = { _id: "group123", creatorId: "user123", logo: "oldlogo.png" };
+    const mockGroup = { _id: "group123", creatorId: "user123", logo: "http://localhost:3500/uploads/groups/oldlogo.png" };
 
     it("should update group if authorized", async () => {
         repoMock.getGroupById.mockResolvedValue(mockGroup as any);

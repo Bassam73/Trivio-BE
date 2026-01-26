@@ -7,6 +7,7 @@ import startAllCrons from "./config/cron";
 import cors from "cors";
 import redisConnection from "./config/redis";
 import { setupAllWorkers } from "./jobs";
+import path from 'path'
 env.config();
 
 const app = express();
@@ -18,7 +19,7 @@ app.use(
     origin: "*",
   })
 );
-
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 bootstrap(app);
 startAllCrons();
 setupAllWorkers();

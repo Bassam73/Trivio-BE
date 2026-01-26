@@ -30,7 +30,7 @@ import {
   changeMemberRoleVal,
   memberActionVal,
 } from "./groups.validation";
-import upload from "../../core/utils/upload";
+import { uploadImage } from "../../core/utils/upload";
 import protectedRoutes from "../../core/middlewares/protectedRoutes";
 
 const validator = valid.createValidator();
@@ -41,7 +41,7 @@ groupRouter
   .post(
     protectedRoutes,
     validator.body(createGroupVal),
-    upload.single("logo"),
+    uploadImage.single("logo"),
     createGroup
   )
   .get(getGroups);
@@ -53,7 +53,7 @@ groupRouter
   .patch(
     protectedRoutes,
     validator.params(paramsIdVal),
-    upload.single("logo"),
+    uploadImage.single("logo"),
     validator.body(updateGroupVal),
     updateGroup
   );

@@ -59,10 +59,13 @@ export default class PostService {
       return post;
     } catch (error) {
       if (data.media && data.media.length > 0) {
-        await Promise.all(
-          data.media.map((media) =>
-            fs.promises.unlink(`uploads/posts/${media}`).catch(() => {})
-          )
+      await Promise.all(
+          data.media.map((media) => {
+            const filename = media.split("/").pop(); // Extract filename from URL
+            return fs.promises
+              .unlink(`uploads/posts/${filename}`)
+              .catch(() => {});
+          })
         );
       }
       throw error;
@@ -90,9 +93,12 @@ export default class PostService {
     }
     if (post.media && post.media.length > 0) {
       await Promise.all(
-        post.media.map((file) =>
-          fs.promises.unlink(`uploads/posts/${file}`).catch(() => {})
-        )
+        post.media.map((file) => {
+          const filename = file.split("/").pop(); // Extract filename from URL
+          return fs.promises
+            .unlink(`uploads/posts/${filename}`)
+            .catch(() => {});
+        })
       );
     }
     const deletedPost = await this.repo.deletePostById(postId);

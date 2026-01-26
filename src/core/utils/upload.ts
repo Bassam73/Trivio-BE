@@ -28,6 +28,28 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
+  const allowedTypes = /jpeg|jpg|png|gif|mp4|mkv|avi|mov|wmv|flv|webm|matroska|msvideo|quicktime/;
+  const extname = allowedTypes.test(
+    path.extname(file.originalname).toLowerCase()
+  );
+  const mimetype = allowedTypes.test(file.mimetype);
+  if (extname && mimetype) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only images and videos are allowed!"));
+  }
+};
+
+const uploadMedia = multer({
+  storage,
+  fileFilter,
+});
+
+const fileFilterImage = (
+  req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   const allowedTypes = /jpeg|jpg|png|gif/;
   const extname = allowedTypes.test(
     path.extname(file.originalname).toLowerCase()
@@ -40,9 +62,9 @@ const fileFilter = (
   }
 };
 
-const upload = multer({
+const uploadImage = multer({
   storage,
-  fileFilter,
+  fileFilter: fileFilterImage,
 });
 
-export default upload;
+export { uploadMedia, uploadImage };

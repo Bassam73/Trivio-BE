@@ -25,7 +25,10 @@ export default class GroupService {
       await this.repo.joinGroup(group._id as string, data.creatorId, "admin", "active");
       return group;
     } catch (err) {
-      await fs.promises.unlink(`uploads/groups/${data.logo}`).catch(() => {});
+      if (data.logo) {
+        const filename = data.logo.split("/").pop();
+        await fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
+      }
       throw err;
     }
   }
@@ -41,8 +44,10 @@ export default class GroupService {
     await this.repo.deleteMembersByGroupId(id);
     await this.repo.deleteJoinRequestsByGroupId(id);
 
-    if (group.logo)
-      await fs.promises.unlink(`uploads/groups/${group.logo}`).catch(() => {});
+    if (group.logo) {
+      const filename = group.logo.split("/").pop();
+      await fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
+    }
   }
   async getGroupById(id: string): Promise<IGroup> {
     const group = await this.repo.getGroupById(id);
@@ -61,14 +66,19 @@ export default class GroupService {
       if (group.creatorId.toString() != data.userID) {
         throw new AppError("you are not authorized to update this group", 403);
       }
-      if (data.data.logo)
-        fs.promises.unlink(`uploads/groups/${group.logo}`).catch(() => {});
+      if (data.data.logo) {
+        if (group.logo) {
+          const filename = group.logo.split("/").pop();
+          fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
+        }
+      }
       const updatedGroup = await this.repo.updateGroupById(data);
       return updatedGroup;
     } catch (err) {
-      await fs.promises
-        .unlink(`uploads/groups/${data.data.logo}`)
-        .catch(() => {});
+      if (data.data.logo) {
+        const filename = data.data.logo.split("/").pop();
+        await fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
+      }
       throw err;
     }
   }

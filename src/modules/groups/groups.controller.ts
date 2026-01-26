@@ -13,7 +13,9 @@ const service = GroupService.getInstance();
 
 export const createGroup = catchError(async (req: Request, res: Response) => {
   const data: createGroupDTO = req.body;
-  data.logo = req.file?.filename;
+  data.logo = `${process.env.BASE_URL || "http://localhost:3500"}/uploads/groups/${
+    req.file?.filename
+  }`;
   console.log(req.user?._id);
   data.creatorId = req.user?._id as string;
   const group = await service.createGroup(data);
@@ -49,7 +51,9 @@ export const updateGroup = catchError(async (req: Request, res: Response) => {
     userID: req.user?._id as string,
   };
   if (req.file) {
-    data.data.logo = req.file.filename;
+    data.data.logo = `${
+      process.env.BASE_URL || "http://localhost:3500"
+    }/uploads/groups/${req.file.filename}`;
   }
   const group = await service.updateGroupById(data);
   res.status(200).json({
