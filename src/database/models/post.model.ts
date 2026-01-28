@@ -37,8 +37,8 @@ const schema: Schema<IPost> = new Schema<IPost>(
     },
     location: {
       type: String,
-      required: true,
       enum: ["profile", "group"],
+      default: "profile",
     },
     groupID: {
       type: mongoose.Schema.Types.ObjectId,
@@ -61,7 +61,7 @@ const schema: Schema<IPost> = new Schema<IPost>(
       angry: { type: Number, default: 0 },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const postModel = mongoose.model("post", schema);

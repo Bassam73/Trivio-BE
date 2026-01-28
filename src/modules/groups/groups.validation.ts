@@ -36,3 +36,27 @@ export const changeMemberRoleVal = Joi.object({
 export const memberActionVal = Joi.object({
   targetUserId: Joi.string().hex().length(24).required(),
 });
+
+
+export const createGroupPostVal = Joi.object({
+  caption: Joi.string().allow("", null),
+  media: Joi.array().items(Joi.string()).optional(),
+  authorID: Joi.string().required(),
+  flagged: Joi.boolean().optional(),
+  mentions: Joi.array().optional(),
+}).custom((value, helpers) => {
+  if (!value.caption && (!value.media || value.media.length === 0)) {
+    return helpers.error("any.required");
+  }
+  return value;
+});
+
+export const paramsGroupPostVal = Joi.object({
+  postId: Joi.string().hex().length(24).required(),
+  id: Joi.string().hex().length(24).required(),
+});
+
+
+export const updateGroupPostVal = Joi.object({
+  caption: Joi.string().allow("", null).required(),
+});

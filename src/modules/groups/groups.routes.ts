@@ -21,7 +21,13 @@ import {
   getGroupMembers,
   getGroupAdmins,
   getGroupModerators,
-} from "./groups.controller"; 
+  createGroupPost,
+  deleteGroupPost,
+  updateGroupPost,
+  getGroupPosts,
+  getGroupPostById,
+  getGroupFeed,
+} from "./groups.controller";
 import {
   createGroupVal,
   paramsIdVal,
@@ -29,9 +35,13 @@ import {
   paramsRequestIdVal,
   changeMemberRoleVal,
   memberActionVal,
+  createGroupPostVal,
+  updateGroupPostVal,
+  paramsGroupPostVal,
 } from "./groups.validation";
-import { uploadImage } from "../../core/utils/upload";
+import { uploadImage, uploadMedia } from "../../core/utils/upload";
 import protectedRoutes from "../../core/middlewares/protectedRoutes";
+import { isGroupMember } from "../../core/middlewares/isGroupMember";
 
 const validator = valid.createValidator();
 const groupRouter = express.Router();
@@ -42,10 +52,10 @@ groupRouter
     protectedRoutes,
     validator.body(createGroupVal),
     uploadImage.single("logo"),
-    createGroup
+    createGroup,
   )
   .get(getGroups);
-
+groupRouter.route("/feed").get(protectedRoutes, getGroupFeed);
 groupRouter
   .route("/:id")
   .delete(protectedRoutes, validator.params(paramsIdVal), deleteGroup)
@@ -55,9 +65,8 @@ groupRouter
     validator.params(paramsIdVal),
     uploadImage.single("logo"),
     validator.body(updateGroupVal),
-    updateGroup
+    updateGroup,
   );
-
 
 groupRouter
   .route("/:id/join")
@@ -80,7 +89,7 @@ groupRouter
   .post(
     protectedRoutes,
     validator.params(paramsRequestIdVal),
-    acceptJoinRequest
+    acceptJoinRequest,
   );
 
 groupRouter
@@ -88,18 +97,95 @@ groupRouter
   .post(
     protectedRoutes,
     validator.params(paramsRequestIdVal),
-    declineJoinRequest
+    declineJoinRequest,
   );
 
-groupRouter.post("/:id/promote", protectedRoutes, validator.params(paramsIdVal), validator.body(changeMemberRoleVal), promoteMember);
-groupRouter.post("/:id/demote", protectedRoutes, validator.params(paramsIdVal), validator.body(changeMemberRoleVal), demoteMember);
-groupRouter.post("/:id/kick", protectedRoutes, validator.params(paramsIdVal), validator.body(memberActionVal), kickMember);
-groupRouter.post("/:id/ban", protectedRoutes, validator.params(paramsIdVal), validator.body(memberActionVal), banMember);
-groupRouter.post("/:id/unban", protectedRoutes, validator.params(paramsIdVal), validator.body(memberActionVal), unbanMember);
+groupRouter.post(
+  "/:id/promote",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  validator.body(changeMemberRoleVal),
+  promoteMember,
+);
+groupRouter.post(
+  "/:id/demote",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  validator.body(changeMemberRoleVal),
+  demoteMember,
+);
+groupRouter.post(
+  "/:id/kick",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  validator.body(memberActionVal),
+  kickMember,
+);
+groupRouter.post(
+  "/:id/ban",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  validator.body(memberActionVal),
+  banMember,
+);
+groupRouter.post(
+  "/:id/unban",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  validator.body(memberActionVal),
+  unbanMember,
+);
 
-groupRouter.get("/:id/members", protectedRoutes, validator.params(paramsIdVal), getGroupMembers);
-groupRouter.get("/:id/admins", protectedRoutes, validator.params(paramsIdVal), getGroupAdmins);
-groupRouter.get("/:id/moderators", protectedRoutes, validator.params(paramsIdVal), getGroupModerators);
-groupRouter.get("/:id/banned", protectedRoutes, validator.params(paramsIdVal), getBannedUsers);
+groupRouter.get(
+  "/:id/members",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  getGroupMembers,
+);
+groupRouter.get(
+  "/:id/admins",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  getGroupAdmins,
+);
+groupRouter.get(
+  "/:id/moderators",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  getGroupModerators,
+);
+groupRouter.get(
+  "/:id/banned",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  getBannedUsers,
+);
+groupRouter
+  .route("/:id/posts")
+  .post(
+    protectedRoutes,
+    isGroupMember,
+    validator.params(paramsIdVal),
+    validator.body(createGroupPostVal),
+    uploadMedia.fields([{ name: "media", maxCount: 10 }]),
+    createGroupPost,
+  )
+  .get(protectedRoutes, validator.params(paramsIdVal), getGroupPosts);
+groupRouter
+  .route("/:id/posts/:postId")
+  .delete(
+    protectedRoutes,
+    isGroupMember,
+    validator.params(paramsGroupPostVal),
+    deleteGroupPost,
+  )
+  .patch(
+    protectedRoutes,
+    isGroupMember,
+    validator.params(paramsGroupPostVal),
+    validator.body(updateGroupPostVal),
+    updateGroupPost,
+  )
+  .get(protectedRoutes, validator.params(paramsGroupPostVal), getGroupPostById);
 
 export default groupRouter;

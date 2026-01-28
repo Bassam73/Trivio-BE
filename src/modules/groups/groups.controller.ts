@@ -8,6 +8,8 @@ import {
   updateGroupDTO,
 } from "../../types/group.types";
 import { checkGroupRole } from "../../core/middlewares/role.middleware"; // Might not use here directly if Service handles it, but maybe for routes?
+import { createPostDTO, updatePostDTO } from "../../types/post.types";
+import mongoose from "mongoose";
 
 const service = GroupService.getInstance();
 
@@ -76,82 +78,224 @@ export const getGroups = catchError(async (req: Request, res: Response) => {
   });
 });
 
-
 export const joinGroup = catchError(async (req: Request, res: Response) => {
-  const result = await service.joinGroup(req.params.id, req.user?._id as string);
+  const result = await service.joinGroup(
+    req.params.id,
+    req.user?._id as string,
+  );
   res.status(200).json({ status: "success", message: result });
 });
 
 export const leaveGroup = catchError(async (req: Request, res: Response) => {
   await service.leaveGroup(req.params.id, req.user?._id as string);
-  res.status(200).json({ status: "success", message: "Left group successfully" });
+  res
+    .status(200)
+    .json({ status: "success", message: "Left group successfully" });
 });
 
-export const getGroupRequests = catchError(async (req: Request, res: Response) => {
-  const { data, page } = await service.getGroupRequests(req.params.id, req.user?._id as string, req.query);
-  res.status(200).json({ status: "success", data: { data, page } });
-});
+export const getGroupRequests = catchError(
+  async (req: Request, res: Response) => {
+    const { data, page } = await service.getGroupRequests(
+      req.params.id,
+      req.user?._id as string,
+      req.query,
+    );
+    res.status(200).json({ status: "success", data: { data, page } });
+  },
+);
 
-export const acceptJoinRequest = catchError(async (req: Request, res: Response) => {
-  await service.acceptJoinRequest(req.params.id, req.user?._id as string, req.params.requestId);
-  res.status(200).json({ status: "success", message: "Request accepted" });
-});
+export const acceptJoinRequest = catchError(
+  async (req: Request, res: Response) => {
+    await service.acceptJoinRequest(
+      req.params.id,
+      req.user?._id as string,
+      req.params.requestId,
+    );
+    res.status(200).json({ status: "success", message: "Request accepted" });
+  },
+);
 
-export const declineJoinRequest = catchError(async (req: Request, res: Response) => {
-  await service.declineJoinRequest(req.params.id, req.user?._id as string, req.params.requestId);
-  res.status(200).json({ status: "success", message: "Request declined" });
-});
-export const cancelJoinRequest = catchError(async (req: Request, res: Response) => {
-  await service.cancelJoinRequest(req.params.id, req.user?._id as string);
-  res.status(200).json({ status: "success", message: "Request cancelled" });
-});
+export const declineJoinRequest = catchError(
+  async (req: Request, res: Response) => {
+    await service.declineJoinRequest(
+      req.params.id,
+      req.user?._id as string,
+      req.params.requestId,
+    );
+    res.status(200).json({ status: "success", message: "Request declined" });
+  },
+);
+export const cancelJoinRequest = catchError(
+  async (req: Request, res: Response) => {
+    await service.cancelJoinRequest(req.params.id, req.user?._id as string);
+    res.status(200).json({ status: "success", message: "Request cancelled" });
+  },
+);
 
 export const promoteMember = catchError(async (req: Request, res: Response) => {
   const { newRole, targetUserId } = req.body;
-  await service.promoteMember({ groupId: req.params.id, targetUserId, newRole }, req.user?._id as string);
-  res.status(200).json({ status: "success", message: "Member promoted successfully" });
+  await service.promoteMember(
+    { groupId: req.params.id, targetUserId, newRole },
+    req.user?._id as string,
+  );
+  res
+    .status(200)
+    .json({ status: "success", message: "Member promoted successfully" });
 });
 
 export const demoteMember = catchError(async (req: Request, res: Response) => {
   const { newRole, targetUserId } = req.body;
-  await service.demoteMember({ groupId: req.params.id, targetUserId, newRole }, req.user?._id as string);
-  res.status(200).json({ status: "success", message: "Member demoted successfully" });
+  await service.demoteMember(
+    { groupId: req.params.id, targetUserId, newRole },
+    req.user?._id as string,
+  );
+  res
+    .status(200)
+    .json({ status: "success", message: "Member demoted successfully" });
 });
 
 export const kickMember = catchError(async (req: Request, res: Response) => {
-    const { targetUserId } = req.body;
-    await service.kickMember({ groupId: req.params.id, targetUserId }, req.user?._id as string);
-    res.status(200).json({ status: "success", message: "Member kicked successfully" });
+  const { targetUserId } = req.body;
+  await service.kickMember(
+    { groupId: req.params.id, targetUserId },
+    req.user?._id as string,
+  );
+  res
+    .status(200)
+    .json({ status: "success", message: "Member kicked successfully" });
 });
 
 export const banMember = catchError(async (req: Request, res: Response) => {
-    const { targetUserId } = req.body;
-    await service.banMember({ groupId: req.params.id, targetUserId }, req.user?._id as string);
-    res.status(200).json({ status: "success", message: "Member banned successfully" });
+  const { targetUserId } = req.body;
+  await service.banMember(
+    { groupId: req.params.id, targetUserId },
+    req.user?._id as string,
+  );
+  res
+    .status(200)
+    .json({ status: "success", message: "Member banned successfully" });
 });
 
 export const unbanMember = catchError(async (req: Request, res: Response) => {
-    const { targetUserId } = req.body;
-    await service.unbanMember({ groupId: req.params.id, targetUserId }, req.user?._id as string);
-    res.status(200).json({ status: "success", message: "Member unbanned successfully" });
+  const { targetUserId } = req.body;
+  await service.unbanMember(
+    { groupId: req.params.id, targetUserId },
+    req.user?._id as string,
+  );
+  res
+    .status(200)
+    .json({ status: "success", message: "Member unbanned successfully" });
 });
 
-export const getBannedUsers = catchError(async (req: Request, res: Response) => {
-    const { data, page } = await service.getBannedUsers(req.params.id, req.user?._id as string, req.query);
+export const getBannedUsers = catchError(
+  async (req: Request, res: Response) => {
+    const { data, page } = await service.getBannedUsers(
+      req.params.id,
+      req.user?._id as string,
+      req.query,
+    );
     res.status(200).json({ status: "success", data: { data, page } });
+  },
+);
+
+export const getGroupMembers = catchError(
+  async (req: Request, res: Response) => {
+    const { data, page } = await service.getGroupMembers(
+      req.params.id,
+      req.query,
+    );
+    res.status(200).json({ status: "success", data: { data, page } });
+  },
+);
+
+export const getGroupAdmins = catchError(
+  async (req: Request, res: Response) => {
+    const { data, page } = await service.getGroupAdmins(
+      req.params.id,
+      req.query,
+    );
+    res.status(200).json({ status: "success", data: { data, page } });
+  },
+);
+
+export const getGroupModerators = catchError(
+  async (req: Request, res: Response) => {
+    const { data, page } = await service.getGroupModerators(
+      req.params.id,
+      req.query,
+    );
+    res.status(200).json({ status: "success", data: { data, page } });
+  },
+);
+
+export const createGroupPost = catchError(
+  async (req: Request, res: Response) => {
+    const data: createPostDTO = req.body;
+    data.authorID = req.user?._id as mongoose.Types.ObjectId;
+    data.groupID = req.params.id as unknown as mongoose.Types.ObjectId;
+    data.location = "group";
+    const files = req.files as { media?: Express.Multer.File[] };
+    if (files?.media && files.media.length > 0) {
+      data.media = files.media.map(
+        (media) =>
+          `${process.env.BASE_URL || "http://localhost:3500"}/uploads/groups/posts/${
+            media.filename
+          }`,
+      );
+    }
+    const post = await service.createGroupPost(data);
+    res.status(201).json({ status: "success", data: { post } });
+  },
+);
+
+export const deleteGroupPost = catchError(
+  async (req: Request, res: Response) => {
+    await service.deleteGroupPost(
+      req.params.id,
+      req.params.postId,
+      req.user?._id as string,
+    );
+    res
+      .status(200)
+      .json({ status: "success", message: "Post deleted successfully" });
+  },
+);
+
+export const updateGroupPost = catchError(
+  async (req: Request, res: Response) => {
+    const data: updatePostDTO = {
+      updatedData: {
+        caption: req.body.caption,
+      },
+      postID: req.params.postId as unknown as mongoose.Types.ObjectId,
+      userID: req.user?._id as mongoose.Types.ObjectId,
+    };
+    const post = await service.updateGroupPost(data);
+    res.status(200).json({ status: "success", data: { post } });
+  },
+);
+
+export const getGroupPosts = catchError(async (req: Request, res: Response) => {
+  const { data, page } = await service.getGroupPosts(
+    req.params.id,
+    req.user?._id as string,
+    req.query,
+  );
+  res.status(200).json({ status: "success", data: { data, page } });
 });
 
-export const getGroupMembers = catchError(async (req: Request, res: Response) => {
-    const { data, page } = await service.getGroupMembers(req.params.id, req.query);
-    res.status(200).json({ status: "success", data: { data, page } });
-});
+export const getGroupPostById = catchError(
+  async (req: Request, res: Response) => {
+    const post = await service.getGroupPostById(
+      req.params.id,
+      req.user?._id as string,
+      req.params.postId,
+    );
+    res.status(200).json({ status: "success", data: { post } });
+  },
+);
 
-export const getGroupAdmins = catchError(async (req: Request, res: Response) => {
-    const { data, page } = await service.getGroupAdmins(req.params.id, req.query);
-    res.status(200).json({ status: "success", data: { data, page } });
-});
-
-export const getGroupModerators = catchError(async (req: Request, res: Response) => {
-    const { data, page } = await service.getGroupModerators(req.params.id, req.query);
-    res.status(200).json({ status: "success", data: { data, page } });
+export const getGroupFeed = catchError(async (req: Request, res: Response) => {
+  const posts = await service.getGroupFeed(req.user?.id as string);
+  res.status(200).json({ status: "success", data: { posts } });
 });

@@ -156,8 +156,7 @@ export default class AuthService {
     }
     const token = jwt.sign(
       { id: user._id, username: user.username, email: user.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: "1d" }
+      process.env.JWT_SECRET!
     );
     return token;
   }
@@ -259,8 +258,7 @@ export default class AuthService {
     if (!user) throw new AppError("Error While creating user", 500);
     const token = jwt.sign(
       { id: user._id, username: user.username, email: user.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: "1d" }
+      process.env.JWT_SECRET!
     );
     return token;
   }

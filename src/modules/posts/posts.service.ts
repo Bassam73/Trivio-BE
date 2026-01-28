@@ -13,6 +13,8 @@ import axios from "axios";
 import fs from "fs";
 import getMentionedUsers from "../../core/utils/mentionedUsers";
 import filterQueue from "../../jobs/queues/filterQueue";
+import ApiFeatures from "../../core/utils/ApiFeatures";
+import { PaginationResult } from "../../types/global";
 
 export default class PostService {
   private static instance: PostService;
@@ -45,7 +47,6 @@ export default class PostService {
           data.mentions = mentions;
         }
       }
-      data.location = "profile";
       console.time("DB Save");
       const post = await this.repo.createPost(data);
       if (data.caption)
@@ -59,13 +60,13 @@ export default class PostService {
       return post;
     } catch (error) {
       if (data.media && data.media.length > 0) {
-      await Promise.all(
+        await Promise.all(
           data.media.map((media) => {
             const filename = media.split("/").pop(); // Extract filename from URL
             return fs.promises
               .unlink(`uploads/posts/${filename}`)
               .catch(() => {});
-          })
+          }),
         );
       }
       throw error;
@@ -98,7 +99,7 @@ export default class PostService {
           return fs.promises
             .unlink(`uploads/posts/${filename}`)
             .catch(() => {});
-        })
+        }),
       );
     }
     const deletedPost = await this.repo.deletePostById(postId);
@@ -116,7 +117,6 @@ export default class PostService {
         type: data.updatedData.type,
       });
     }
-
     if (data.updatedData.caption === "") {
       return await this.repo.updatePostById(data.postID.toString(), {
         caption: "",
@@ -133,15 +133,44 @@ export default class PostService {
       caption: data.updatedData.caption,
       type: data.updatedData.type,
       mentions: await getMentionedUsers(data.updatedData.caption),
-      flagged: ToxicityFlags.safe,
+      flagged: false,
     };
-    return await this.repo.updatePostById(data.postID.toString(), updates);
+    const updatedPost = await this.repo.updatePostById(
+      data.postID.toString(),
+      updates,
+    );
+    return updatedPost;
+  }
+  async deleteGroupPost(postId: string): Promise<IPost> {
+    const post = await this.repo.getPostById(postId);
+    if (!post) throw new AppError("post not found", 404);
+    if (post.media && post.media.length > 0) {
+      await Promise.all(
+        post.media.map((file) => {
+          const filename = file.split("/").pop();
+          console.log(filename);
+          return fs.promises
+            .unlink(`uploads/groups/posts/${filename}`)
+            .catch(() => {});
+        }),
+      );
+    }
+    const deletedPost = await this.repo.deletePostById(postId);
+    if (!deletedPost) throw new AppError("error while deleting post", 500);
+    return deletedPost;
+  }
+
+  async getGroupPosts(
+    groupId: string,
+    query: string,
+  ): Promise<PaginationResult<IPost>> {
+    return this.repo.getGroupPosts(groupId, query);
   }
   static getInstace() {
     if (!PostService.instance) {
       PostService.instance = new PostService(
         PostRepository.getInstace(),
-        AuthRepository.getInstance()
+        AuthRepository.getInstance(),
       );
     }
     return PostService.instance;

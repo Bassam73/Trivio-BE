@@ -1,4 +1,6 @@
+import ApiFeatures from "../../core/utils/ApiFeatures";
 import postModel from "../../database/models/post.model";
+import { PaginationResult } from "../../types/global";
 import { createPostDTO, IPost } from "../../types/post.types";
 
 export default class PostRepository {
@@ -18,6 +20,23 @@ export default class PostRepository {
   }
   async updatePostById(id: string, data: any): Promise<IPost | null> {
     return await postModel.findByIdAndUpdate(id, data, { new: true });
+  }
+  async getGroupPosts(groupId: string, searchQuery: any) {
+    const apiFeatures = new ApiFeatures<IPost>(
+      postModel.find({ location: "group", groupID: groupId }),
+      searchQuery,
+    )
+      .filter()
+      .search()
+      .sort()
+      .fields()
+      .pagination(10);
+
+    const reuslt: PaginationResult<IPost> = {
+      data: await apiFeatures.getQuery(),
+      page: apiFeatures.getPageNumber(),
+    };
+    return reuslt;
   }
   static getInstace() {
     if (!PostRepository.instance) {
