@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
-
-export interface IFollow {
+export enum FollowStauts {
+  following = "following",
+  pending = "pedning",
+}
+export interface IFollow extends Document {
+  _id: string;
   userId: mongoose.Types.ObjectId;
-  followingId: mongoose.Types.ObjectId;
+  follwerId: mongoose.Types.ObjectId;
+  status: FollowStauts;
 }

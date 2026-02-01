@@ -1,5 +1,8 @@
 import { Document } from "mongoose";
-
+export enum UserPrivacy {
+  private = "private",
+  public = "public",
+}
 export interface IUser extends Document {
   username: string;
   email: string;
@@ -16,6 +19,7 @@ export interface IUser extends Document {
   followers?: number;
   posts?: number;
   favTeams?: [string];
+  privacy?: UserPrivacy;
 }
 
 export interface signupDTO {

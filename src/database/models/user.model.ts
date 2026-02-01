@@ -66,6 +66,11 @@ const schema: Schema<IUser> = new Schema<IUser>(
       type: Number,
       default: 0,
     },
+    privacy:{
+      type : String ,
+      enum: ['public' , 'private'],
+      default : "public"
+    },
     favTeams: {
       type: [String],
     },

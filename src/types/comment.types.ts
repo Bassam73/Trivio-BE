@@ -6,4 +6,6 @@ export interface IComment {
   parent: mongoose.Types.ObjectId;
   media?: string;
   text?: string;
+  isDeleted: boolean;
+  isEdited: boolean;
 }

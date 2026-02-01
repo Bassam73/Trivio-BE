@@ -22,11 +22,20 @@ const schema: Schema<IComment> = new Schema<IComment>(
     text: {
       type: String,
     },
+    isDeleted : {
+      type : Boolean,
+      default :false
+    },
+    isEdited : {
+      type : Boolean,
+      default : false
+    }
   },
   {
     timestamps: true,
-  }
+  },
 );
-
-const commentModel = new mongoose.Model("like", schema);
+schema.index({ postId: 1, parent: 1, createdAt: -1 });
+schema.index({ parent: 1, createdAt: 1 });
+const commentModel = mongoose.model<IComment>("comment", schema);
 export default commentModel;

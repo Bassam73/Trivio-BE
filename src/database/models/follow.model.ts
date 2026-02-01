@@ -1,5 +1,5 @@
-import { Model, Schema } from "mongoose";
-import { IFollow } from "../../types/follow.types";
+import mongoose, { Model, Schema } from "mongoose";
+import { FollowStauts, IFollow } from "../../types/follow.types";
 
 const schema: Schema<IFollow> = new Schema<IFollow>(
   {
@@ -8,16 +8,20 @@ const schema: Schema<IFollow> = new Schema<IFollow>(
       required: true,
       ref: "user",
     },
-    followingId: {
+    follwerId: {
       type: Schema.Types.ObjectId,
       required: true,
       ref: "user",
     },
+    status: {
+      type: String,
+      enum: FollowStauts,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
-
-const followModel = new Model("follow", schema);
+schema.index({ userId: 1, follwerId: 1 });
+const followModel = mongoose.model<IFollow>("follow", schema);
 export default followModel;
