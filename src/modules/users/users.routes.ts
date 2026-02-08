@@ -8,6 +8,9 @@ import {
   getFollowing,
   unFollowUser,
   getRelationshipStatus,
+  getMyFollowers,
+  getMyFollowing,
+  getMe,
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -15,6 +18,10 @@ usersRouter
   .route("/:id/follow")
   .post(protectedRoutes, validator.params(paramsIdVal), followUser)
   .delete(protectedRoutes, validator.params(paramsIdVal), unFollowUser);
+
+usersRouter.get("/me/followers", protectedRoutes, getMyFollowers);
+usersRouter.get("/me/following", protectedRoutes, getMyFollowing);
+usersRouter.get("/me", protectedRoutes, getMe);
 
 usersRouter.get(
   "/:id/followers",

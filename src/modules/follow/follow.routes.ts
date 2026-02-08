@@ -12,7 +12,7 @@ const followRouter = express.Router();
 
 followRouter.get("/me", protectedRoutes, getFollowRequests);
 followRouter.patch(
-  "/follow-requests/:requestId/accept",
+  "/:requestId/accept",
   protectedRoutes,
   validator.params(followRequestVal),
   acceptFollowRequest,

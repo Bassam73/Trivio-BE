@@ -57,6 +57,13 @@ export default class UsersService {
   async getRelationshipStatus(targetUserId: string, currentUserId: string): Promise<string> {
     return await this.followSerivce.getRelationshipStatus(currentUserId, targetUserId);
   }
+
+  async getMe(userId: string): Promise<IUser> {
+    const user = await this.repo.getUserByID(userId);
+    if (!user) throw new AppError("User not found", 404);
+    return user;
+  }
+
   static getInstance() {
     if (!UsersService.instance) {
       UsersService.instance = new UsersService(
