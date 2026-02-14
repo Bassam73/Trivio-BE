@@ -31,7 +31,7 @@ export const setupEmailWorker = () => {
 
   worker.on("failed", (job, err) => {
     console.error(
-      `Email job ${job?.id} failed for ${job?.data.email} with error: ${err.message}`
+      `Email job ${job?.id} failed for ${job?.data.email} with error: ${err.message}`,
     );
   });
   return worker;

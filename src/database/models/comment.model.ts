@@ -16,26 +16,26 @@ const schema: Schema<IComment> = new Schema<IComment>(
       type: Schema.Types.ObjectId,
       ref: "comment",
     },
-    media: {
-      type: String,
-    },
     text: {
       type: String,
     },
-    isDeleted : {
-      type : Boolean,
-      default :false
+    isEdited: {
+      type: Boolean,
+      default: false,
     },
-    isEdited : {
-      type : Boolean,
-      default : false
-    }
+    repliesCount: {
+      type: Number,
+      default: 0,
+    },
+    reactionsCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
   },
 );
-schema.index({ postId: 1, parent: 1, createdAt: -1 });
-schema.index({ parent: 1, createdAt: 1 });
+schema.index({ postId: 1, parentId: 1, reactionsCount: -1, _id: -1 });
 const commentModel = mongoose.model<IComment>("comment", schema);
 export default commentModel;
