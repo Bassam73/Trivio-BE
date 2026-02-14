@@ -33,31 +33,49 @@ export const getFollowing = catchError(async (req: Request, res: Response) => {
   res.status(200).json({ status: "success", data: { following } });
 });
 
-export const getRelationshipStatus = catchError(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const currentUserId = req.user?._id as string;
-  const status = await service.getRelationshipStatus(id, currentUserId);
-  res.status(200).json({ status: "success", data: { status } });
-});
+export const getRelationshipStatus = catchError(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const currentUserId = req.user?._id as string;
+    const status = await service.getRelationshipStatus(id, currentUserId);
+    res.status(200).json({ status: "success", data: { status } });
+  },
+);
 
-export const getMyFollowers = catchError(async (req: Request, res: Response) => {
-  const id = req.user?._id as string;
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const followers = await service.getFollowers(id, page, limit);
-  res.status(200).json({ status: "success", data: { followers } });
-});
+export const getMyFollowers = catchError(
+  async (req: Request, res: Response) => {
+    const id = req.user?._id as string;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const followers = await service.getFollowers(id, page, limit);
+    res.status(200).json({ status: "success", data: { followers } });
+  },
+);
 
-export const getMyFollowing = catchError(async (req: Request, res: Response) => {
-  const id = req.user?._id as string;
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const following = await service.getFollowing(id, page, limit);
-  res.status(200).json({ status: "success", data: { following } });
-});
+export const getMyFollowing = catchError(
+  async (req: Request, res: Response) => {
+    const id = req.user?._id as string;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const following = await service.getFollowing(id, page, limit);
+    res.status(200).json({ status: "success", data: { following } });
+  },
+);
 
 export const getMe = catchError(async (req: Request, res: Response) => {
   const id = req.user?._id as string;
   const user = await service.getMe(id);
   res.status(200).json({ status: "success", data: { user } });
+});
+
+export const getMyJoinedGroups = catchError(
+  async (req: Request, res: Response) => {
+    const groups = await service.getMyJoinedGroups(req.user?.id as string);
+    res.status(200).json({ status: "success", data: { groups } });
+  },
+);
+
+export const getMyGroups = catchError(async (req: Request, res: Response) => {
+  const groups = await service.getMyGroups(req.user?.id as string);
+  res.status(200).json({ status: "success", data: { groups } });
 });

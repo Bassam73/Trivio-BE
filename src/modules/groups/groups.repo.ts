@@ -227,10 +227,17 @@ export default class GroupRepository {
   async getJoinsForUser(userID: string) {
     return await groupMemberModel.find({ userId: userID });
   }
+
+  async getMyGroups(userID: string) {
+    return await groupModel.find({ creatorId: userID });
+  }
   static getInstance() {
     if (!GroupRepository.instance) {
       GroupRepository.instance = new GroupRepository();
     }
     return GroupRepository.instance;
+  }
+  async getUsersJoinedGroups(userID: string) {
+    return groupMemberModel.find({ userId: userID }).populate("groupId");
   }
 }
