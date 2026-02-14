@@ -15,7 +15,6 @@ const schema: Schema<IGroup> = new Schema<IGroup>(
     },
     description: {
       type: String,
-      required: true,
     },
     logo: {
       type: String,
@@ -43,7 +42,7 @@ const schema: Schema<IGroup> = new Schema<IGroup>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const groupModel = mongoose.model("group", schema);

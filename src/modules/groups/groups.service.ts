@@ -586,6 +586,26 @@ export default class GroupService {
     const shuffledPosts = this.shufflePosts(posts);
     return shuffledPosts;
   }
+
+  async getUserJoinedGroups(userID: string) {
+    const memberships = await this.repo.getUsersJoinedGroups(userID);
+    if (memberships.length == 0)
+      throw new AppError("No groups found for this user", 404);
+
+    const groups = memberships.map((membership) => {
+      return membership.groupId;
+    });
+    console.log(groups);
+    return groups;
+  }
+
+  async getMyGroups(userID: string) {
+    const groups = await this.repo.getMyGroups(userID);
+    if (groups.length == 0)
+      throw new AppError("No groups created by this user", 404);
+
+    return groups;
+  }
   static getInstance() {
     if (!GroupService.instance) {
       GroupService.instance = new GroupService();

@@ -2,15 +2,22 @@ import AppError from "../../core/utils/AppError";
 import { FollowStauts, IFollow } from "../../types/follow.types";
 import { IUser, UserPrivacy } from "../../types/user.types";
 import FollowService from "../follow/follow.service";
+import GroupService from "../groups/groups.service";
 import UsersRepository from "./users.repo";
 
 export default class UsersService {
   private static instance: UsersService;
   private repo: UsersRepository;
   private followSerivce: FollowService;
-  constructor(repo: UsersRepository, followService: FollowService) {
+  private groupService: GroupService;
+  constructor(
+    repo: UsersRepository,
+    followService: FollowService,
+    groupService: GroupService,
+  ) {
     this.repo = repo;
     this.followSerivce = followService;
+    this.groupService = groupService;
   }
 
   async followUser(userID: string, followerID: string): Promise<IFollow> {
@@ -46,16 +53,30 @@ export default class UsersService {
     }
   }
 
-  async getFollowers(userId: string, page: number, limit: number): Promise<IFollow[]> {
+  async getFollowers(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<IFollow[]> {
     return await this.followSerivce.getFollowers(userId, page, limit);
   }
 
-  async getFollowing(userId: string, page: number, limit: number): Promise<IFollow[]> {
+  async getFollowing(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<IFollow[]> {
     return await this.followSerivce.getFollowing(userId, page, limit);
   }
 
-  async getRelationshipStatus(targetUserId: string, currentUserId: string): Promise<string> {
-    return await this.followSerivce.getRelationshipStatus(currentUserId, targetUserId);
+  async getRelationshipStatus(
+    targetUserId: string,
+    currentUserId: string,
+  ): Promise<string> {
+    return await this.followSerivce.getRelationshipStatus(
+      currentUserId,
+      targetUserId,
+    );
   }
 
   async getMe(userId: string): Promise<IUser> {
@@ -64,11 +85,19 @@ export default class UsersService {
     return user;
   }
 
+  async getMyJoinedGroups(userID: string) {
+    return await this.groupService.getUserJoinedGroups(userID);
+  }
+
+  async getMyGroups(userID: string) {
+    return await this.groupService.getMyGroups(userID);
+  }
   static getInstance() {
     if (!UsersService.instance) {
       UsersService.instance = new UsersService(
         UsersRepository.getInstance(),
         FollowService.getInstance(),
+        GroupService.getInstance(),
       );
     }
     return UsersService.instance;

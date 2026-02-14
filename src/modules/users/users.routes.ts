@@ -11,6 +11,8 @@ import {
   getMyFollowers,
   getMyFollowing,
   getMe,
+  getMyJoinedGroups,
+  getMyGroups,
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -44,4 +46,6 @@ usersRouter.get(
   getRelationshipStatus,
 );
 
+usersRouter.get("/me/joined-groups", protectedRoutes, getMyJoinedGroups);
+usersRouter.get("/me/my-groups", protectedRoutes, getMyGroups);
 export default usersRouter;
