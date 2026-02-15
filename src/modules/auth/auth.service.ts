@@ -14,7 +14,7 @@ import AuthRepository from "./auth.repo";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
-import emailQueue from "../../jobs/queues/emailQueue";
+// import emailQueue from "../../jobs/queues/emailQueue";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -50,13 +50,13 @@ export default class AuthService {
       const updatedUser = await this.repo.updateUser(existingEmail);
       if (!updatedUser) throw new AppError("Error while updating user", 500);
 
-      await emailQueue.add("send-verification-code", {
-        email: updatedUser.email,
-        username: updatedUser.username,
-        code: newCode,
-        type: "code",
-      });
-      return updatedUser;
+      // await emailQueue.add("send-verification-code", {
+      //   email: updatedUser.email,
+      //   username: updatedUser.username,
+      //   code: newCode,
+      //   type: "code",
+      // });
+      // return updatedUser;
     }
 
     const existingUsername = await this.repo.findAnyUserByUsername(
@@ -81,12 +81,12 @@ export default class AuthService {
     const user = await this.repo.createUser(data);
     if (!user) throw new AppError("Error while creating the user", 500);
 
-    await emailQueue.add("send-verification-code", {
-      email: user.email,
-      username: user.username,
-      code: data.code,
-      type: "code",
-    });
+    // await emailQueue.add("send-verification-code", {
+    //   email: user.email,
+    //   username: user.username,
+    //   code: data.code,
+    //   type: "code",
+    // });
     return user;
   }
 
@@ -118,12 +118,12 @@ export default class AuthService {
     const updatedUser = await this.repo.updateUser(user);
     if (!updatedUser) throw new AppError("Error while updating user", 500);
 
-    await emailQueue.add("send-verification-code-change", {
-      email: updatedUser.email,
-      username: updatedUser.username,
-      code: code,
-      type: "code",
-    });
+    // await emailQueue.add("send-verification-code-change", {
+    //   email: updatedUser.email,
+    //   username: updatedUser.username,
+    //   code: code,
+    //   type: "code",
+    // });
     return updatedUser;
   }
 
@@ -168,12 +168,12 @@ export default class AuthService {
     }
     const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     await this.repo.setOTP(user.id, otp);
-    await emailQueue.add("send-otp", {
-      email: user.email,
-      username: user.username,
-      code: otp,
-      type: "otp",
-    });
+    // await emailQueue.add("send-otp", {
+    //   email: user.email,
+    //   username: user.username,
+    //   code: otp,
+    //   type: "otp",
+    // });
     return;
   }
   async verfiyAccount(data: verifyAccountDTO) {

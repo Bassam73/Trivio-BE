@@ -2,15 +2,17 @@ import AppError from "../../core/utils/AppError";
 import { FollowStauts, IFollow } from "../../types/follow.types";
 import { IUser, UserPrivacy } from "../../types/user.types";
 import FollowService from "../follow/follow.service";
+import PostService from "../posts/posts.service";
 import UsersRepository from "./users.repo";
-
 export default class UsersService {
   private static instance: UsersService;
   private repo: UsersRepository;
   private followSerivce: FollowService;
-  constructor(repo: UsersRepository, followService: FollowService) {
+  private postService: PostService;
+  constructor(repo: UsersRepository, followService: FollowService, postService: PostService) {
     this.repo = repo;
     this.followSerivce = followService;
+    this.postService = postService
   }
 
   async followUser(userID: string, followerID: string): Promise<IFollow> {
@@ -64,11 +66,47 @@ export default class UsersService {
     return user;
   }
 
+  async getLikedPosts(userId: string, page: number, limit: number): Promise<any> {
+      return await this.repo.getLikedPostIds(userId, page, limit);
+  }
+  
+  async getBulkLikedPosts(postIds: string[]): Promise<any> {
+    return await this.postService.getPostsByIds(postIds);
+  }
+  async getUserPosts(userId: string, page: number, limit: number): Promise<any> { 
+    return await this.postService.getUsersPosts(userId, page, limit);
+  }
+
+
+  async updateProfile(userId: string, data: any): Promise<IUser> {
+    
+    const allowedUpdates = ['favPlayers', 'favTeams', 'bio', 'avatar','username'];
+    const safeData: any = {};
+    if (data) {
+      console.log(data)
+      Object.keys(data).forEach(key => {
+          if (allowedUpdates.includes(key)) {
+              safeData[key] = data[key];
+          }
+      });
+    }
+
+    console.log(safeData);
+    const updatedUser = await this.repo.updateProfile(userId, safeData);
+    if (!updatedUser) throw new AppError("User not found", 404);
+    return updatedUser;
+  }
+
+  async togglePrivacy(userId: string): Promise<void> { 
+    
+  }
+
   static getInstance() {
     if (!UsersService.instance) {
       UsersService.instance = new UsersService(
         UsersRepository.getInstance(),
         FollowService.getInstance(),
+        PostService.getInstace(),
       );
     }
     return UsersService.instance;

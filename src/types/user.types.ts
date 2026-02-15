@@ -7,6 +7,8 @@ export interface IUser extends Document {
   username: string;
   email: string;
   role: string;
+  bio?: string;
+  avatar?: string;
   password?: string;
   passwordChangedAt?: Date;
   code?: number;
@@ -19,7 +21,9 @@ export interface IUser extends Document {
   followers?: number;
   posts?: number;
   favTeams?: [string];
+  favPlayers?: [string];
   privacy?: UserPrivacy;
+  likedPosts?: [string];
 }
 
 export interface signupDTO {
@@ -60,4 +64,12 @@ export interface ChangeEmailInVerifyDTO {
   email: string;
   username: string;
   code?: number;
+}
+
+export interface updateProfileDTO {
+  favPlayers?: [string];
+  favTeams?: [string];
+  bio?: string;
+  avatar?: string;
+  username?: string;
 }

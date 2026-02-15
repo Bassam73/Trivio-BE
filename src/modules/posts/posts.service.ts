@@ -12,7 +12,7 @@ import PostRepository from "./posts.repo";
 import axios from "axios";
 import fs from "fs";
 import getMentionedUsers from "../../core/utils/mentionedUsers";
-import filterQueue from "../../jobs/queues/filterQueue";
+// import filterQueue from "../../jobs/queues/filterQueue";
 import ApiFeatures from "../../core/utils/ApiFeatures";
 import { PaginationResult } from "../../types/global";
 
@@ -50,10 +50,10 @@ export default class PostService {
       console.time("DB Save");
       const post = await this.repo.createPost(data);
       if (data.caption)
-        filterQueue.add("check-filter", {
-          postID: post._id as string,
-          caption: data.caption,
-        });
+        // filterQueue.add("check-filter", {
+        //   postID: post._id as string,
+        //   caption: data.caption,
+        // });
       console.timeEnd("DB Save");
       console.timeEnd("Total Logic Time");
 
@@ -125,10 +125,10 @@ export default class PostService {
         type: data.updatedData.type,
       });
     }
-    filterQueue.add("check-filter", {
-      postID: data.postID.toString(),
-      caption: data.updatedData.caption,
-    });
+    // filterQueue.add("check-filter", {
+    //   postID: data.postID.toString(),
+    //   caption: data.updatedData.caption,
+    // });
     const updates: any = {
       caption: data.updatedData.caption,
       type: data.updatedData.type,
@@ -159,6 +159,15 @@ export default class PostService {
     if (!deletedPost) throw new AppError("error while deleting post", 500);
     return deletedPost;
   }
+
+  async getUsersPosts(userId: string, page: number, limit: number): Promise<IPost[]> {
+    return await this.repo.findPostsByUserId(userId, page, limit) as IPost[];
+  }
+
+  async getPostsByIds(postIds: string[]): Promise<IPost[]> {
+    return await this.repo.findPostsByIds(postIds);
+  }
+
 
   async getGroupPosts(
     groupId: string,

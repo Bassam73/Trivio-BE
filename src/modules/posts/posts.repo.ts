@@ -38,6 +38,30 @@ export default class PostRepository {
     };
     return reuslt;
   }
+
+  async findPostsByIds(postIds: string[]) {
+    return await postModel.find({ 
+      _id: { $in: postIds } 
+    });
+  }
+  async findPostsByUserId(userId: string, page: number, limit: number): Promise<IPost[]> {
+    return await postModel.find({ 
+        authorID: userId,
+        location: "profile" 
+      })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate({
+        path: "authorID",
+        select: "username avatar" 
+      })
+      .populate({
+        path: "sharedFrom",
+        populate: { path: "authorID", select: "username avatar" }
+      })
+      .exec();
+  }
   static getInstace() {
     if (!PostRepository.instance) {
       PostRepository.instance = new PostRepository();

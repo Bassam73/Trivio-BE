@@ -25,6 +25,32 @@ export default class UsersRepository {
     );
   }
 
+ async getLikedPostIds(userId: string, page: number, limit: number): Promise<string[]> {
+  const user = await userModel.findById(userId)
+    .select("likedPosts") 
+    .populate({
+      path: "likedPosts",
+      select: "post",
+      options: {
+        skip: (page - 1) * limit,
+        limit: limit,
+        sort: { createdAt: -1 } 
+      },
+    });
+
+  if (!user || !user.likedPosts) {
+    return [];
+  }
+  const postIds = user.likedPosts.map((like: any) => like.post);
+  return postIds;
+}
+
+ async updateProfile(userId: string, data: any): Promise<IUser | null> {
+  return await userModel.findByIdAndUpdate(userId, data, { new: true ,runValidators: true});
+}
+
+
+
   static getInstance() {
     if (!UsersRepository.instance) {
       UsersRepository.instance = new UsersRepository();

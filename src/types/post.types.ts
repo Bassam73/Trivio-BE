@@ -16,6 +16,7 @@ export interface IPost {
   groupID?: mongoose.Types.ObjectId;
   views?: number;
   flagged?: boolean;
+  tags?: [string];
   reactionCounts: {
     like: number;
     love: number;
