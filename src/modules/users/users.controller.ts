@@ -90,6 +90,7 @@ export const getUserPosts = catchError(async (req: Request, res: Response) => {
 
 });
 
+
 export const updateProfile = catchError(async (req: Request, res: Response) => {
   const id = req.user?._id as string;
   console.log(id);
@@ -104,48 +105,67 @@ export const updateProfile = catchError(async (req: Request, res: Response) => {
   res.status(200).json({ status: "success", data: { user: updatedUser } });
 });
 
+// not yet agreed whether the account would have a privacy setting or not
 export const togglePrivacy = catchError(async (req: Request, res: Response) => {
-  const id = req.user?._id as string;
-  await service.togglePrivacy(id);
-  res.status(200).json({ status: "success" });
-  
+  // const id = req.user?._id as string;
+  // await service.togglePrivacy(id);
+  // res.status(200).json({ status: "success" });
 
 });
 export const getSavedPosts = catchError(async (req: Request, res: Response) => {
   // to be implemented in the future
 });
+
+
 export const getFavTeams = catchError(async (req: Request, res: Response) => {
-  // to be implemented in the future
+  const id = req.user?._id as string;
+  // const user = await service.getMe(id);
+  const teams = await service.getFavTeams(id);
+  res.status(200).json({ status: "success", data: { teams } });
+  
 });
 export const getFavPlayers = catchError(async (req: Request, res: Response) => {
-  // to be implemented in the future
+  const id = req.user?._id as string;
+  const players = await service.getFavPlayers(id);
+  res.status(200).json({ status: "success", data: { players } });
 });
 
-export const updateFavTeams = catchError(async (req: Request, res: Response) => {
-  // to be implemented in the future
-});
-export const updateFavPlayers = catchError(async (req: Request, res: Response) => {
-  // to be implemented in the future
-});
+export const removeFavTeam = catchError(async (req: Request, res: Response) => {
+  const id = req.user?._id as string;
+  const teamsToRemove: string[] = req.body.teams || [];
+  console.log(teamsToRemove);
+  const updatedUser = await service.removeTeam(id,teamsToRemove);
+  res.status(200).json({ status: "success", data: { user: updatedUser } });
 
 
+});
+export const removeFavPlayer = catchError(async (req: Request, res: Response) => {
+  const id = req.user?._id as string;
+  const playersToRemove: string[] = req.body.players || [];
+  const updatedUser = await service.removePlayer(id,playersToRemove);
+  res.status(200).json({ status: "success", data: { user: updatedUser } });
+});
+
+export const changePassword = catchError(async (req: Request, res: Response) => {
+  const id = req.user?._id as string;
+  const { currentPassword, newPassword } = req.body;
+  await service.changePassword(id, currentPassword, newPassword);
+  res.status(200).json({ status: "success" });
+});
 
 //2- update email in another route to handle the email verification process
 
 
-//4- toggle privacy in another route to handle the privacy validation
-// and the follow requests when changing from public to private
-
-
 //5-  get liked posts --> wait for the reaction module to be implemented to return the post ids
 
-//6-  get saved posts??
-//15- block user??
-//16- unblock user??
-//17- get blocked users??
 
+
+//--------------------------------------------------
+//not yet agreed on the method of implementation:
+//1- get saved posts??
+//2- block user??
+//3- unblock user??
+//---------------------------------------------------
 
 //18- get feed --> recommender system
-
-
-//19- suggest users to follow 
+//19- suggest users to follow

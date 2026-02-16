@@ -49,7 +49,37 @@ export default class UsersRepository {
   return await userModel.findByIdAndUpdate(userId, data, { new: true ,runValidators: true});
 }
 
+  async removeTeam(userId: string, teamsToRemove: string[]): Promise<IUser | null> {
+    console.log(teamsToRemove);
+    return await userModel.findByIdAndUpdate(
+      userId,
+      {
+        $pull: { favTeams: { $in: teamsToRemove } },
+      },
+      { new: true },
+    );
+  }
+  async removePlayer(userId: string, playersToRemove: string[]): Promise<IUser | null> {
+  console.log(playersToRemove);
+  return await userModel.findByIdAndUpdate(
+    userId,
+    {
+      $pull: { favPlayers: { $in: playersToRemove } },
+    },
+    { new: true },
+  );
+}
 
+
+  async changePassword(userId: string, newPassword: string): Promise<void> {
+    await userModel.findByIdAndUpdate(
+      userId,
+      {
+        password: newPassword,
+      },
+      {runValidators: true}
+    );
+  }
 
   static getInstance() {
     if (!UsersRepository.instance) {

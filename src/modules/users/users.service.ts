@@ -4,6 +4,9 @@ import { IUser, UserPrivacy } from "../../types/user.types";
 import FollowService from "../follow/follow.service";
 import PostService from "../posts/posts.service";
 import UsersRepository from "./users.repo";
+
+import bcrypt from "bcrypt";
+
 export default class UsersService {
   private static instance: UsersService;
   private repo: UsersRepository;
@@ -77,29 +80,88 @@ export default class UsersService {
     return await this.postService.getUsersPosts(userId, page, limit);
   }
 
-
+// update existing user data and it is also the way for the user to add fav teams , players and avatar
   async updateProfile(userId: string, data: any): Promise<IUser> {
+    const currentUser = await this.repo.getUserByID(userId);
+    if (!currentUser) throw new AppError("User not found", 404);
     
     const allowedUpdates = ['favPlayers', 'favTeams', 'bio', 'avatar','username'];
-    const safeData: any = {};
+    const updateOp: any = {};
     if (data) {
       console.log(data)
       Object.keys(data).forEach(key => {
           if (allowedUpdates.includes(key)) {
-              safeData[key] = data[key];
+              let value = data[key];
+              if ((key === 'favTeams' || key === 'favPlayers') && typeof data[key] === 'string') {
+                  try {
+                      value = JSON.parse(data[key]);
+                  } catch (error) {
+                      value = data[key];
+                  }
+              }
+
+              if (key === 'username' && value === currentUser.username) {
+                  return;
+              }
+              if (key === 'favTeams' || key === 'favPlayers') {
+                  if (!updateOp.$addToSet) updateOp.$addToSet = {};
+                  updateOp.$addToSet[key] = { $each: Array.isArray(value) ? value : [value] };
+              } else {
+                  if (!updateOp.$set) updateOp.$set = {};
+                  updateOp.$set[key] = value;
+              }
           }
       });
     }
 
-    console.log(safeData);
-    const updatedUser = await this.repo.updateProfile(userId, safeData);
+    if (Object.keys(updateOp).length === 0) return currentUser;
+
+    console.log(updateOp);
+    const updatedUser = await this.repo.updateProfile(userId, updateOp);
     if (!updatedUser) throw new AppError("User not found", 404);
     return updatedUser;
   }
 
-  async togglePrivacy(userId: string): Promise<void> { 
-    
+  async getFavTeams(userId: string): Promise<any> { 
+    const user = await this.repo.getUserByID(userId);
+    if (!user) throw new AppError("User not found", 404);
+    return user.favTeams;
   }
+  async getFavPlayers(userId: string): Promise<any> { 
+    const user = await this.repo.getUserByID(userId);
+    if (!user) throw new AppError("User not found", 404);
+    return user.favPlayers;
+  }
+
+  async removeTeam(userId: string, teamsToRemove: string[]): Promise<IUser> {
+      const user = await this.repo.getUserByID(userId);
+      if (!user) throw new AppError("User not found", 404);
+      const updatedUser = await this.repo.removeTeam(userId, teamsToRemove);
+      if (!updatedUser) throw new AppError("User not found", 404);
+      return updatedUser;
+  }
+  
+   async removePlayer(userId: string, playersToRemove: string[]): Promise<IUser> {
+      const user = await this.repo.getUserByID(userId);
+      if (!user) throw new AppError("User not found", 404);
+      const updatedUser = await this.repo.removePlayer(userId, playersToRemove);
+      if (!updatedUser) throw new AppError("Error updating user", 400);
+      return updatedUser;
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.repo.getUserByID(userId);
+    if (!user) throw new AppError("User not found", 404);
+    if (!user.isVerified) throw new AppError("User is not verified", 400);
+    if (!user.password) throw new AppError("User does not have a password set", 400);
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) throw new AppError("Invalid current password", 400);
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, parseInt(process.env.SALT_ROUNDS!));
+    await this.repo.changePassword(userId, hashedNewPassword);
+  }
+  
 
   static getInstance() {
     if (!UsersService.instance) {

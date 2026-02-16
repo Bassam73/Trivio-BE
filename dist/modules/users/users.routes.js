@@ -22,6 +22,11 @@ usersRouter.get("/me/likedPostsIds", protectedRoutes_1.default, users_controller
 usersRouter.get("/me/likedPosts", protectedRoutes_1.default, users_controller_1.getLikedPosts);
 usersRouter.get("/me/saved-posts", protectedRoutes_1.default, users_controller_1.getSavedPosts);
 usersRouter.get("/me/posts", protectedRoutes_1.default, users_controller_1.getUserPosts);
+usersRouter.get("/me/favTeams", protectedRoutes_1.default, users_controller_1.getFavTeams);
+usersRouter.get("/me/favPlayers", protectedRoutes_1.default, users_controller_1.getFavPlayers);
+usersRouter.patch("/me/removeFavPlayer", protectedRoutes_1.default, users_controller_1.removeFavPlayer);
+usersRouter.patch("/me/removeFavTeam", protectedRoutes_1.default, users_controller_1.removeFavTeam);
+usersRouter.patch("/me/changePassword", protectedRoutes_1.default, users_controller_1.changePassword);
 usersRouter.patch("/me/updateProfile", protectedRoutes_1.default, upload_1.uploadImage.fields([{ name: "avatar", maxCount: 1 }]), users_controller_1.updateProfile);
 usersRouter.get("/:id/followers", protectedRoutes_1.default, validator.params(users_validation_1.paramsIdVal), users_controller_1.getFollowers);
 usersRouter.get("/:id/following", protectedRoutes_1.default, validator.params(users_validation_1.paramsIdVal), users_controller_1.getFollowing);

@@ -39,6 +39,23 @@ class UsersRepository {
     async updateProfile(userId, data) {
         return await user_model_1.default.findByIdAndUpdate(userId, data, { new: true, runValidators: true });
     }
+    async removeTeam(userId, teamsToRemove) {
+        console.log(teamsToRemove);
+        return await user_model_1.default.findByIdAndUpdate(userId, {
+            $pull: { favTeams: { $in: teamsToRemove } },
+        }, { new: true });
+    }
+    async removePlayer(userId, playersToRemove) {
+        console.log(playersToRemove);
+        return await user_model_1.default.findByIdAndUpdate(userId, {
+            $pull: { favPlayers: { $in: playersToRemove } },
+        }, { new: true });
+    }
+    async changePassword(userId, newPassword) {
+        await user_model_1.default.findByIdAndUpdate(userId, {
+            password: newPassword,
+        }, { runValidators: true });
+    }
     static getInstance() {
         if (!UsersRepository.instance) {
             UsersRepository.instance = new UsersRepository();

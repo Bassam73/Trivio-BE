@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateFavPlayers = exports.updateFavTeams = exports.getFavPlayers = exports.getFavTeams = exports.getSavedPosts = exports.togglePrivacy = exports.updateProfile = exports.getUserPosts = exports.getLikedPosts = exports.getLikePostsID = exports.getMe = exports.getMyFollowing = exports.getMyFollowers = exports.getRelationshipStatus = exports.getFollowing = exports.getFollowers = exports.unFollowUser = exports.followUser = void 0;
+exports.changePassword = exports.removeFavPlayer = exports.removeFavTeam = exports.getFavPlayers = exports.getFavTeams = exports.getSavedPosts = exports.togglePrivacy = exports.updateProfile = exports.getUserPosts = exports.getLikedPosts = exports.getLikePostsID = exports.getMe = exports.getMyFollowing = exports.getMyFollowers = exports.getRelationshipStatus = exports.getFollowing = exports.getFollowers = exports.unFollowUser = exports.followUser = void 0;
 const catchError_1 = __importDefault(require("../../core/middlewares/catchError"));
 const users_service_1 = __importDefault(require("./users.service"));
 const service = users_service_1.default.getInstance();
@@ -91,36 +91,53 @@ exports.updateProfile = (0, catchError_1.default)(async (req, res) => {
     const updatedUser = await service.updateProfile(id, data);
     res.status(200).json({ status: "success", data: { user: updatedUser } });
 });
+// not yet agreed whether the account would have a privacy setting or not
 exports.togglePrivacy = (0, catchError_1.default)(async (req, res) => {
+    // const id = req.user?._id as string;
+    // await service.togglePrivacy(id);
+    // res.status(200).json({ status: "success" });
 });
 exports.getSavedPosts = (0, catchError_1.default)(async (req, res) => {
     // to be implemented in the future
 });
 exports.getFavTeams = (0, catchError_1.default)(async (req, res) => {
-    // to be implemented in the future
+    const id = req.user?._id;
+    // const user = await service.getMe(id);
+    const teams = await service.getFavTeams(id);
+    res.status(200).json({ status: "success", data: { teams } });
 });
 exports.getFavPlayers = (0, catchError_1.default)(async (req, res) => {
-    // to be implemented in the future
+    const id = req.user?._id;
+    const players = await service.getFavPlayers(id);
+    res.status(200).json({ status: "success", data: { players } });
 });
-exports.updateFavTeams = (0, catchError_1.default)(async (req, res) => {
-    // to be implemented in the future
+exports.removeFavTeam = (0, catchError_1.default)(async (req, res) => {
+    const id = req.user?._id;
+    const teamsToRemove = req.body.teams || [];
+    console.log(teamsToRemove);
+    const updatedUser = await service.removeTeam(id, teamsToRemove);
+    res.status(200).json({ status: "success", data: { user: updatedUser } });
 });
-exports.updateFavPlayers = (0, catchError_1.default)(async (req, res) => {
-    // to be implemented in the future
+exports.removeFavPlayer = (0, catchError_1.default)(async (req, res) => {
+    const id = req.user?._id;
+    const playersToRemove = req.body.players || [];
+    const updatedUser = await service.removePlayer(id, playersToRemove);
+    res.status(200).json({ status: "success", data: { user: updatedUser } });
 });
-//1- update me (user name , bio, avatar) in another route in case we want to
-// add more fields in the future and to avoid making the update user route too big and
-// to avoid making the user update route with many optional fields that can be updated
+exports.changePassword = (0, catchError_1.default)(async (req, res) => {
+    const id = req.user?._id;
+    const { currentPassword, newPassword } = req.body;
+    await service.changePassword(id, currentPassword, newPassword);
+    res.status(200).json({ status: "success" });
+});
 //2- update email in another route to handle the email verification process
-//3- update password in another route to handle the password validation and hashing process
-//4- toggle privacy in another route to handle the privacy validation
-// and the follow requests when changing from public to private
+//3- update password in another route to handle the password validation and hashing
 //5-  get liked posts --> wait for the reaction module to be implemented to return the post ids
-//6-  get saved posts??
-//7-  get user posts with pagination(shared or posted) in profile
-//13- upload avatar
-//15- block user??
-//16- unblock user??
-//17- get blocked users??
+//--------------------------------------------------
+//not yet agreed on the method of implementation:
+//1- get saved posts??
+//2- block user??
+//3- unblock user??
+//---------------------------------------------------
 //18- get feed --> recommender system
-//19- suggest users to follow 
+//19- suggest users to follow

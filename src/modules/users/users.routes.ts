@@ -18,6 +18,11 @@ import {
   getSavedPosts,
   updateProfile,
   getMe,
+  getFavTeams,
+  getFavPlayers,
+  removeFavPlayer,
+  removeFavTeam,
+  changePassword
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -30,11 +35,23 @@ usersRouter.get("/me/followers", protectedRoutes, getMyFollowers);
 usersRouter.get("/me/following", protectedRoutes, getMyFollowing);
 
 usersRouter.get("/me", protectedRoutes, getMe);
+
 usersRouter.get("/me/likedPostsIds", protectedRoutes, getLikePostsID);
 usersRouter.get("/me/likedPosts", protectedRoutes, getLikedPosts);
 usersRouter.get("/me/saved-posts", protectedRoutes, getSavedPosts);
 usersRouter.get("/me/posts", protectedRoutes, getUserPosts);
-usersRouter.patch("/me/updateProfile", protectedRoutes, uploadImage.fields([{ name: "avatar", maxCount: 1 }]),updateProfile);
+
+
+usersRouter.get("/me/favTeams", protectedRoutes, getFavTeams);
+usersRouter.get("/me/favPlayers", protectedRoutes, getFavPlayers);
+usersRouter.patch("/me/removeFavPlayer", protectedRoutes, removeFavPlayer);
+usersRouter.patch("/me/removeFavTeam", protectedRoutes, removeFavTeam);
+usersRouter.patch("/me/changePassword", protectedRoutes, changePassword);
+
+
+
+usersRouter.patch("/me/updateProfile", protectedRoutes, uploadImage.fields([{ name: "avatar", maxCount: 1 }]), updateProfile);
+
 usersRouter.get(
   "/:id/followers",
   protectedRoutes,
