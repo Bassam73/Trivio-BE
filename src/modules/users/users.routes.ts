@@ -22,7 +22,8 @@ import {
   getFavPlayers,
   removeFavPlayer,
   removeFavTeam,
-  changePassword
+  changePassword,
+  suggestUsers
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -35,6 +36,7 @@ usersRouter.get("/me/followers", protectedRoutes, getMyFollowers);
 usersRouter.get("/me/following", protectedRoutes, getMyFollowing);
 
 usersRouter.get("/me", protectedRoutes, getMe);
+// usersRouter.get("/me/suggestUsersToFollow", protectedRoutes, suggestUsers);
 
 usersRouter.get("/me/likedPostsIds", protectedRoutes, getLikePostsID);
 usersRouter.get("/me/likedPosts", protectedRoutes, getLikedPosts);

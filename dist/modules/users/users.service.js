@@ -148,6 +148,44 @@ class UsersService {
         const hashedNewPassword = await bcrypt_1.default.hash(newPassword, parseInt(process.env.SALT_ROUNDS));
         await this.repo.changePassword(userId, hashedNewPassword);
     }
+    async suggestUsers(userId, limit = 10) {
+        const user = await this.repo.getUserByID(userId);
+        if (!user)
+            throw new AppError_1.default("User not found", 404);
+        // 1. Get users I already follow to exclude them
+        const myFollowing = await this.followSerivce.getFollowing(userId, 1, 100);
+        const myFollowingIds = myFollowing.map((f) => (f.following._id || f.following).toString());
+        // 2. Friends of Friends
+        const fofCandidates = new Set();
+        const friendsToCheck = myFollowing.slice(0, 5);
+        await Promise.all(friendsToCheck.map(async (friendFollow) => {
+            const friendId = (friendFollow.following._id || friendFollow.following).toString();
+            const friendsFollowings = await this.followSerivce.getFollowing(friendId, 1, 20);
+            friendsFollowings.forEach((f) => {
+                const candidateId = (f.following._id || f.following).toString();
+                // Exclude myself and people I already follow
+                if (candidateId !== userId && !myFollowingIds.includes(candidateId)) {
+                    fofCandidates.add(candidateId);
+                }
+            });
+        }));
+        let suggestions = [];
+        const fofIds = Array.from(fofCandidates);
+        if (fofIds.length > 0) {
+            suggestions = await this.repo.getUsersByIds(fofIds.slice(0, limit));
+        }
+        // 3. Interest based
+        if (suggestions.length < limit) {
+            const { favTeams = [], favPlayers = [] } = user;
+            const remainingLimit = limit - suggestions.length;
+            const excludeIds = [...myFollowingIds, ...suggestions.map((u) => u._id.toString())];
+            if (favTeams.length > 0 || favPlayers.length > 0) {
+                const interestUsers = await this.repo.findUsersBySharedInterests(userId, excludeIds, favTeams, favPlayers, remainingLimit);
+                suggestions = [...suggestions, ...interestUsers];
+            }
+        }
+        return suggestions;
+    }
     static getInstance() {
         if (!UsersService.instance) {
             UsersService.instance = new UsersService(users_repo_1.default.getInstance(), follow_service_1.default.getInstance(), posts_service_1.default.getInstace());

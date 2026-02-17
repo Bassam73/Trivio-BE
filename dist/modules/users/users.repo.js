@@ -56,6 +56,15 @@ class UsersRepository {
             password: newPassword,
         }, { runValidators: true });
     }
+    async getUsersByIds(ids) {
+        return await user_model_1.default.find({ _id: { $in: ids } });
+    }
+    async findUsersBySharedInterests(userId, excludeIds, favTeams, favPlayers, limit) {
+        return await user_model_1.default.find({
+            _id: { $nin: [userId, ...excludeIds] },
+            $or: [{ favTeams: { $in: favTeams } }, { favPlayers: { $in: favPlayers } }],
+        }).limit(limit);
+    }
     static getInstance() {
         if (!UsersRepository.instance) {
             UsersRepository.instance = new UsersRepository();

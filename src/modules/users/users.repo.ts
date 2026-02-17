@@ -81,6 +81,23 @@ export default class UsersRepository {
     );
   }
 
+  async getUsersByIds(ids: string[]): Promise<IUser[]> {
+    return await userModel.find({ _id: { $in: ids } });
+  }
+
+  async findUsersBySharedInterests(
+    userId: string,
+    excludeIds: string[],
+    favTeams: string[],
+    favPlayers: string[],
+    limit: number
+  ): Promise<IUser[]> {
+    return await userModel.find({
+      _id: { $nin: [userId, ...excludeIds] },
+      $or: [{ favTeams: { $in: favTeams } }, { favPlayers: { $in: favPlayers } }],
+    }).limit(limit);
+  }
+
   static getInstance() {
     if (!UsersRepository.instance) {
       UsersRepository.instance = new UsersRepository();

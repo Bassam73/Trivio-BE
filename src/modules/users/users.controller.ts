@@ -153,6 +153,15 @@ export const changePassword = catchError(async (req: Request, res: Response) => 
   res.status(200).json({ status: "success" });
 });
 
+//suggest users to follow based on shared interests (fav teams and players)
+export const suggestUsers = catchError(async (req: Request, res: Response) => {
+  const id = req.user?._id as string;
+  const limit = Number(req.query.limit) || 10;
+  const suggestions = await service.suggestUsers(id, limit);
+  res.status(200).json({ status: "success", data: { suggestions } });
+});
+
+
 //2- update email in another route to handle the email verification process
 
 
@@ -160,12 +169,11 @@ export const changePassword = catchError(async (req: Request, res: Response) => 
 
 
 
+
 //--------------------------------------------------
 //not yet agreed on the method of implementation:
-//1- get saved posts??
-//2- block user??
-//3- unblock user??
+//1- block user??
+//2- unblock user??
 //---------------------------------------------------
 
 //18- get feed --> recommender system
-//19- suggest users to follow

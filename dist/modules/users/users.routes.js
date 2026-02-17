@@ -18,6 +18,7 @@ usersRouter
 usersRouter.get("/me/followers", protectedRoutes_1.default, users_controller_1.getMyFollowers);
 usersRouter.get("/me/following", protectedRoutes_1.default, users_controller_1.getMyFollowing);
 usersRouter.get("/me", protectedRoutes_1.default, users_controller_1.getMe);
+usersRouter.get("/me/suggestUsersToFollow", protectedRoutes_1.default, users_controller_1.suggestUsers);
 usersRouter.get("/me/likedPostsIds", protectedRoutes_1.default, users_controller_1.getLikePostsID);
 usersRouter.get("/me/likedPosts", protectedRoutes_1.default, users_controller_1.getLikedPosts);
 usersRouter.get("/me/saved-posts", protectedRoutes_1.default, users_controller_1.getSavedPosts);

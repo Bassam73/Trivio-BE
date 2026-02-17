@@ -162,6 +162,52 @@ export default class UsersService {
     await this.repo.changePassword(userId, hashedNewPassword);
   }
   
+  async suggestUsers(userId: string, limit: number = 10): Promise<IUser[]> {
+    const user = await this.repo.getUserByID(userId);
+    if (!user) throw new AppError("User not found", 404);
+
+    // 1. Get users I already follow to exclude them
+    const myFollowing = await this.followSerivce.getFollowing(userId, 1, 100);
+    const myFollowingIds = myFollowing.map((f: any) => (f.following._id || f.following).toString());
+
+    // 2. Friends of Friends
+    const fofCandidates = new Set<string>();
+    const friendsToCheck = myFollowing.slice(0, 5);
+
+    await Promise.all(friendsToCheck.map(async (friendFollow: any) => {
+      const friendId = (friendFollow.following._id || friendFollow.following).toString();
+      const friendsFollowings = await this.followSerivce.getFollowing(friendId, 1, 20);
+
+      friendsFollowings.forEach((f: any) => {
+        const candidateId = (f.following._id || f.following).toString();
+        // Exclude myself and people I already follow
+        if (candidateId !== userId && !myFollowingIds.includes(candidateId)) {
+          fofCandidates.add(candidateId);
+        }
+      });
+    }));
+
+    let suggestions: IUser[] = [];
+    const fofIds = Array.from(fofCandidates);
+
+    if (fofIds.length > 0) {
+      suggestions = await this.repo.getUsersByIds(fofIds.slice(0, limit));
+    }
+
+    // 3. Interest based
+    if (suggestions.length < limit) {
+      const { favTeams = [], favPlayers = [] } = user;
+      const remainingLimit = limit - suggestions.length;
+      const excludeIds = [...myFollowingIds, ...suggestions.map((u: any) => u._id.toString())];
+
+      if (favTeams.length > 0 || favPlayers.length > 0) {
+        const interestUsers = await this.repo.findUsersBySharedInterests(userId, excludeIds, favTeams, favPlayers, remainingLimit);
+        suggestions = [...suggestions, ...interestUsers];
+      }
+    }
+
+    return suggestions;
+  }
 
   static getInstance() {
     if (!UsersService.instance) {
@@ -174,3 +220,5 @@ export default class UsersService {
     return UsersService.instance;
   }
 }
+
+

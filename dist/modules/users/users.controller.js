@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.changePassword = exports.removeFavPlayer = exports.removeFavTeam = exports.getFavPlayers = exports.getFavTeams = exports.getSavedPosts = exports.togglePrivacy = exports.updateProfile = exports.getUserPosts = exports.getLikedPosts = exports.getLikePostsID = exports.getMe = exports.getMyFollowing = exports.getMyFollowers = exports.getRelationshipStatus = exports.getFollowing = exports.getFollowers = exports.unFollowUser = exports.followUser = void 0;
+exports.suggestUsers = exports.changePassword = exports.removeFavPlayer = exports.removeFavTeam = exports.getFavPlayers = exports.getFavTeams = exports.getSavedPosts = exports.togglePrivacy = exports.updateProfile = exports.getUserPosts = exports.getLikedPosts = exports.getLikePostsID = exports.getMe = exports.getMyFollowing = exports.getMyFollowers = exports.getRelationshipStatus = exports.getFollowing = exports.getFollowers = exports.unFollowUser = exports.followUser = void 0;
 const catchError_1 = __importDefault(require("../../core/middlewares/catchError"));
 const users_service_1 = __importDefault(require("./users.service"));
 const service = users_service_1.default.getInstance();
@@ -130,14 +130,18 @@ exports.changePassword = (0, catchError_1.default)(async (req, res) => {
     await service.changePassword(id, currentPassword, newPassword);
     res.status(200).json({ status: "success" });
 });
+//suggest users to follow based on shared interests (fav teams and players)
+exports.suggestUsers = (0, catchError_1.default)(async (req, res) => {
+    const id = req.user?._id;
+    const limit = Number(req.query.limit) || 10;
+    const suggestions = await service.suggestUsers(id, limit);
+    res.status(200).json({ status: "success", data: { suggestions } });
+});
 //2- update email in another route to handle the email verification process
-//3- update password in another route to handle the password validation and hashing
 //5-  get liked posts --> wait for the reaction module to be implemented to return the post ids
 //--------------------------------------------------
 //not yet agreed on the method of implementation:
-//1- get saved posts??
-//2- block user??
-//3- unblock user??
+//1- block user??
+//2- unblock user??
 //---------------------------------------------------
 //18- get feed --> recommender system
-//19- suggest users to follow
