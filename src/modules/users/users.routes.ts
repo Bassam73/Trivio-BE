@@ -1,7 +1,7 @@
 import express from "express";
 import valid from "express-joi-validation";
 import protectedRoutes from "../../core/middlewares/protectedRoutes";
-import { paramsIdVal } from "./users.validation";
+import { changePasswordVal, paramsIdVal, removeFavPlayerVal, removeFavTeamVal, updateProfileVal } from "./users.validation";
 import { uploadImage } from "../../core/utils/upload";
 
 import {
@@ -46,13 +46,15 @@ usersRouter.get("/me/posts", protectedRoutes, getUserPosts);
 
 usersRouter.get("/me/favTeams", protectedRoutes, getFavTeams);
 usersRouter.get("/me/favPlayers", protectedRoutes, getFavPlayers);
-usersRouter.patch("/me/removeFavPlayer", protectedRoutes, removeFavPlayer);
-usersRouter.patch("/me/removeFavTeam", protectedRoutes, removeFavTeam);
-usersRouter.patch("/me/changePassword", protectedRoutes, changePassword);
+
+usersRouter.patch("/me/removeFavPlayer", protectedRoutes,validator.body(removeFavPlayerVal), removeFavPlayer);
+usersRouter.patch("/me/removeFavTeam", protectedRoutes,validator.body(removeFavTeamVal) ,removeFavTeam);
+usersRouter.patch("/me/changePassword", protectedRoutes,validator.body(changePasswordVal) ,changePassword);
 
 
 
-usersRouter.patch("/me/updateProfile", protectedRoutes, uploadImage.fields([{ name: "avatar", maxCount: 1 }]), updateProfile);
+usersRouter.patch("/me/updateProfile", protectedRoutes,
+  uploadImage.fields([{ name: "avatar", maxCount: 1 }]), validator.body(updateProfileVal), updateProfile);
 
 usersRouter.get(
   "/:id/followers",
