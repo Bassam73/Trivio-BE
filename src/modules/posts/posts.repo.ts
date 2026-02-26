@@ -21,6 +21,13 @@ export default class PostRepository {
   async updatePostById(id: string, data: any): Promise<IPost | null> {
     return await postModel.findByIdAndUpdate(id, data, { new: true });
   }
+  async incrementCommentsCount(id: string): Promise<IPost | null> {
+    return await postModel.findByIdAndUpdate(
+      id,
+      { $inc: { commentsCount: 1 } },
+      { new: true }
+    );
+  }
   async getGroupPosts(groupId: string, searchQuery: any) {
     const apiFeatures = new ApiFeatures<IPost>(
       postModel.find({ location: "group", groupID: groupId }),
@@ -37,6 +44,9 @@ export default class PostRepository {
       page: apiFeatures.getPageNumber(),
     };
     return reuslt;
+  }
+  async getPostByID(id: string): Promise<IPost | null> {
+    return await postModel.findById(id);
   }
   static getInstace() {
     if (!PostRepository.instance) {

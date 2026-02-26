@@ -52,6 +52,10 @@ const schema: Schema<IPost> = new Schema<IPost>(
       type: Boolean,
       default: false,
     },
+    commentsCount: {
+      type:Number,
+      default:0
+    },
     reactionCounts: {
       like: { type: Number, default: 0 },
       love: { type: Number, default: 0 },

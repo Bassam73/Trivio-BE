@@ -1,0 +1,370 @@
+# Comments & Post Comments Endpoints Documentation
+
+This document provides a comprehensive detailing of all endpoints related to Comments (and Post Comments) located in the `src/modules/comments` and `src/modules/posts` modules.
+
+It includes the request parameters, expected responses (success and error cases), and an in-depth explanation of the business logic behind each endpoint.
+
+---
+
+## 1. Create a Comment on a Post
+
+- **Endpoint:** `POST /api/v1/posts/:id/comments`
+- **Authentication:** Required (Bearer Token)
+- **Authorization:** Requires Post Access (`authorizePostAccess` middleware)
+
+### Logical Flow
+1. Validates the request parameters (`id` as MongoDB ObjectId) and body (`text`).
+2. Confirms user is authenticated and authorized to access the designated post.
+3. Creates a new comment associated with the provided `postId` and the authenticated `userId`.
+4. Asynchronously adds the comment text to the `check-filter` job queue for toxicity/profanity checking.
+
+### Expected Responses
+
+**Success (201 Created)**
+```json
+{
+  "status": "success",
+  "data": {
+    "comment": {
+      "_id": "60d5ec49f1b2c83008988a2a",
+      "userId": "60d5ec49f1b2c83008988a1f",
+      "postId": "60d5ec49f1b2c83008988a21",
+      "text": "This is a great post!",
+      "isEdited": false,
+      "repliesCount": 0,
+      "reactionsCount": 0,
+      "flagged": false,
+      "createdAt": "2026-02-26T12:00:00.000Z",
+      "updatedAt": "2026-02-26T12:00:00.000Z",
+      "__v": 0
+    }
+  }
+}
+```
+
+**Errors**
+- **401 Unauthorized**
+  ```json
+  {
+    "status": "error",
+    "message": "User not authenticated"
+  }
+  ```
+- **400 Bad Request** _(Validation Error, e.g., missing text)_
+  ```json
+  {
+    "status": "error",
+    "message": "\"text\" is required"
+  }
+  ```
+- **403 Forbidden** _(User does not have access to the post)_
+  ```json
+  {
+    "status": "error",
+    "message": "You are not authorized to access this post"
+  }
+  ```
+
+---
+
+## 2. Get Post Comments
+
+- **Endpoint:** `GET /api/v1/posts/:id/comments`
+- **Authentication:** Required (Bearer Token)
+- **Authorization:** Requires Post Access (`authorizePostAccess` middleware)
+- **Query Parameters:** `page`, `limit`, `sort`, `fields`, `keyword` (Standard Pagination/Filtering)
+
+### Logical Flow
+1. Verifies the user is authenticated and has access to the post.
+2. Checks if the post exists in the database.
+3. Fetches top-level comments for the post (where `parent` field does not exist) using standard API Features (pagination, sorting, filtering).
+4. Default sort is `-createdAt` (newest first).
+
+### Expected Responses
+
+**Success (200 OK)**
+```json
+{
+  "status": "success",
+  "data": {
+    "data": [
+      {
+        "_id": "60d5ec49f1b2c83008988a2a",
+        "userId": "60d5ec49f1b2c83008988a1f",
+        "postId": "60d5ec49f1b2c83008988a21",
+        "text": "This is a great post!",
+        "isEdited": false,
+        "repliesCount": 0,
+        "reactionsCount": 0,
+        "flagged": false,
+        "createdAt": "2026-02-26T12:00:00.000Z",
+        "updatedAt": "2026-02-26T12:00:00.000Z",
+        "__v": 0
+      }
+    ],
+    "page": 1
+  }
+}
+```
+
+**Errors**
+- **404 Not Found** _(Post does not exist)_
+  ```json
+  {
+    "status": "error",
+    "message": "Post not found"
+  }
+  ```
+
+---
+
+## 3. Get a Specific Comment
+
+- **Endpoint:** `GET /api/v1/comments/:cid`
+- **Authentication:** Required (Bearer Token)
+- **Authorization:** Requires Post Access (`authorizePostAccess` middleware)
+
+### Logical Flow
+1. Validates the user access to the parent post context.
+2. Retrieves the single comment by its ID `cid`.
+3. If not found, throws a 404 error.
+
+### Expected Responses
+
+**Success (200 OK)**
+```json
+{
+  "status": "success",
+  "data": {
+    "comment": {
+      "_id": "60d5ec49f1b2c83008988a2a",
+      "userId": "60d5ec49f1b2c83008988a1f",
+      "postId": "60d5ec49f1b2c83008988a21",
+      "text": "Specific comment retrieved",
+      "isEdited": false,
+      "repliesCount": 0,
+      "reactionsCount": 0,
+      "flagged": false,
+      "createdAt": "2026-02-26T12:00:00.000Z",
+      "updatedAt": "2026-02-26T12:00:00.000Z",
+      "__v": 0
+    }
+  }
+}
+```
+
+**Errors**
+- **404 Not Found** _(Comment does not exist)_
+  ```json
+  {
+    "status": "error",
+    "message": "Comment not found"
+  }
+  ```
+
+---
+
+## 4. Update a Comment
+
+- **Endpoint:** `PUT /api/v1/comments/:cid`
+- **Authentication:** Required (Bearer Token)
+- **Authorization:** Requires Post Access (`authorizePostAccess` middleware)
+
+### Logical Flow
+1. Validates `text` string in the body.
+2. Checks if the comment exists.
+3. **Authorization Check:** Ensures the requester (`req.user.id`) is the author (`userId`) of the comment.
+4. Updates the comment, explicitly setting `isEdited: true` and resetting `flagged: false` to force re-evaluation.
+5. Pushes the updated text to the `check-filter` background queue for toxicity screening.
+
+### Expected Responses
+
+**Success (200 OK)**
+```json
+{
+  "status": "success",
+  "data": {
+    "comment": {
+      "_id": "60d5ec49f1b2c83008988a2a",
+      "userId": "60d5ec49f1b2c83008988a1f",
+      "postId": "60d5ec49f1b2c83008988a21",
+      "text": "This is an updated comment text!",
+      "isEdited": true,
+      "repliesCount": 0,
+      "reactionsCount": 0,
+      "flagged": false,
+      "createdAt": "2026-02-26T12:00:00.000Z",
+      "updatedAt": "2026-02-26T12:05:00.000Z",
+      "__v": 0
+    }
+  }
+}
+```
+
+**Errors**
+- **403 Forbidden** _(Requester is not the author)_
+  ```json
+  {
+    "status": "error",
+    "message": "You are not authorized to update this comment"
+  }
+  ```
+- **404 Not Found** _(Comment does not exist)_
+  ```json
+  {
+    "status": "error",
+    "message": "Comment not found"
+  }
+  ```
+
+---
+
+## 5. Delete a Comment
+
+- **Endpoint:** `DELETE /api/v1/comments/:cid`
+- **Authentication:** Required (Bearer Token)
+- **Authorization:** Requires Post Access (`authorizePostAccess` middleware)
+
+### Logical Flow
+1. Retrieves the comment by `cid`. Checks if it exists.
+2. Fetches the associated post. Checks if it exists.
+3. **Complex Authorization Check:**
+   - Evaluates to true if the requester is the original author of the comment (`comment.userId === userId`).
+   - If the comment belongs to a Post inside a Group (`post.groupID`), evaluatates to true if the requester is an Admin or Moderator of that particular Group.
+4. If unauthorized, throws a 403.
+5. Deletes all nesting child replies for the comment (`deleteRepliesByParentId`).
+6. Deletes the comment itself.
+
+### Expected Responses
+
+**Success (204 No Content)**
+```json
+{
+  "status": "success",
+  "data": null
+}
+```
+
+**Errors**
+- **403 Forbidden** _(Not author, and not group admin/mod)_
+  ```json
+  {
+    "status": "error",
+    "message": "You are not authorized to delete this comment"
+  }
+  ```
+- **404 Not Found** _(Comment or Post does not exist)_
+  ```json
+  {
+    "status": "error",
+    "message": "Comment not found" // Or "Post associated with comment not found"
+  }
+  ```
+
+---
+
+## 6. Create a Reply to a Comment
+
+- **Endpoint:** `POST /api/v1/comments/:cid/replies`
+- **Authentication:** Required (Bearer Token)
+- **Authorization:** Requires Post Access (`authorizePostAccess` middleware)
+
+### Logical Flow
+1. Retrieves the parent comment (`cid`). If not found, throws 404.
+2. Checks if the parent comment itself is a reply (`parent` property exists). If so, throws 400 forbidding nested replies (max depth = 1).
+3. Inherits the `postId` from the parent comment.
+4. Creates the new reply associating it with the `postId` and setting `parent` to the parent comment's `_id`.
+5. Increments the `repliesCount` on the parent comment and the `commentsCount` on the generic Post model.
+6. Submits the reply text to the `check-filter` logic queue.
+
+### Expected Responses
+
+**Success (201 Created)**
+```json
+{
+  "status": "success",
+  "data": {
+    "reply": {
+      "_id": "60d5ec49f1b2c83008988bee",
+      "userId": "60d5ec49f1b2c83008988a1f",
+      "postId": "60d5ec49f1b2c83008988a21",
+      "parent": "60d5ec49f1b2c83008988a2a",
+      "text": "This is a reply to the comment!",
+      "isEdited": false,
+      "repliesCount": 0,
+      "reactionsCount": 0,
+      "flagged": false,
+      "createdAt": "2026-02-26T12:10:00.000Z",
+      "updatedAt": "2026-02-26T12:10:00.000Z",
+      "__v": 0
+    }
+  }
+}
+```
+
+**Errors**
+- **400 Bad Request** _(Max nested depth exceeded)_
+  ```json
+  {
+    "status": "error",
+    "message": "Nested replies are not allowed"
+  }
+  ```
+- **404 Not Found** _(Parent comment missing)_
+  ```json
+  {
+    "status": "error",
+    "message": "Parent comment not found"
+  }
+  ```
+
+---
+
+## 7. Get Replies for a Comment
+
+- **Endpoint:** `GET /api/v1/comments/:cid/replies`
+- **Authentication:** Required (Bearer Token)
+- **Authorization:** Requires Post Access (`authorizePostAccess` middleware)
+- **Query Parameters:** `page`, `limit`, `sort`, `fields`, `keyword`
+
+### Logical Flow
+1. Looks up the parent comment to guarantee it exists.
+2. Utilizes ApiFeatures to query comments where the `parent` property equals the requested `cid`.
+3. Default sort is order of insertion (`createdAt` ASCending) so older replies sit continuously at the top.
+
+### Expected Responses
+
+**Success (200 OK)**
+```json
+{
+  "status": "success",
+  "data": {
+    "data": [
+      {
+        "_id": "60d5ec49f1b2c83008988bee",
+        "userId": "60d5ec49f1b2c83008988a1f",
+        "postId": "60d5ec49f1b2c83008988a21",
+        "parent": "60d5ec49f1b2c83008988a2a",
+        "text": "This is a reply to the comment!",
+        "isEdited": false,
+        "repliesCount": 0,
+        "reactionsCount": 0,
+        "flagged": false,
+        "createdAt": "2026-02-26T12:10:00.000Z",
+        "updatedAt": "2026-02-26T12:10:00.000Z",
+        "__v": 0
+      }
+    ],
+    "page": 1
+  }
+}
+```
+
+**Errors**
+- **404 Not Found** _(Parent comment does not exist)_
+  ```json
+  {
+    "status": "error",
+    "message": "Parent comment not found"
+  }
+  ```

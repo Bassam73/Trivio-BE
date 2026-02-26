@@ -14,12 +14,15 @@ import fs from "fs";
 import getMentionedUsers from "../../core/utils/mentionedUsers";
 import filterQueue from "../../jobs/queues/filterQueue";
 import ApiFeatures from "../../core/utils/ApiFeatures";
-import { PaginationResult } from "../../types/global";
+import { FilterType, PaginationResult } from "../../types/global";
+import { createCommentDTO, IComment } from "../../types/comment.types";
+import CommentsService from "../comments/comments.service";
 
 export default class PostService {
   private static instance: PostService;
   private repo: PostRepository;
   private userRepo: AuthRepository;
+
   constructor(repo: PostRepository, userRepo: AuthRepository) {
     this.repo = repo;
     this.userRepo = userRepo;
@@ -51,8 +54,9 @@ export default class PostService {
       const post = await this.repo.createPost(data);
       if (data.caption)
         filterQueue.add("check-filter", {
-          postID: post._id as string,
+          id: post._id as string,
           caption: data.caption,
+          filterType: FilterType.post,
         });
       console.timeEnd("DB Save");
       console.timeEnd("Total Logic Time");
@@ -84,7 +88,9 @@ export default class PostService {
     if (post.type !== "public") throw new AppError("post is not public", 403);
     return post;
   }
-
+  async getPostbyId(id: string): Promise<IPost | null> {
+    return await this.repo.getPostByID(id);
+  }
   async deletePostById(postId: string, userId: mongoose.Types.ObjectId) {
     const post = await this.repo.getPostById(postId);
     if (!post) throw new AppError("post not found", 404);
@@ -126,8 +132,9 @@ export default class PostService {
       });
     }
     filterQueue.add("check-filter", {
-      postID: data.postID.toString(),
+      id: data.postID.toString(),
       caption: data.updatedData.caption,
+      filterType: FilterType.post,
     });
     const updates: any = {
       caption: data.updatedData.caption,
@@ -160,6 +167,15 @@ export default class PostService {
     return deletedPost;
   }
 
+  async createComment(postID: createCommentDTO): Promise<IComment> {
+    return await CommentsService.getInstance().createComment(postID);
+  }
+  async getPostComments(postId: string, query: any): Promise<PaginationResult<IComment>> {
+    return await CommentsService.getInstance().getPostComments(postId, query);
+  }
+  async incrementCommentsCount(postId: string): Promise<IPost | null> {
+    return await this.repo.incrementCommentsCount(postId);
+  }
   async getGroupPosts(
     groupId: string,
     query: string,
