@@ -460,7 +460,7 @@ export default class GroupService {
     return await this.repo.getMembers(groupId, query, "moderator", "active");
   }
 
-  private async checkGroupAdmin(
+  public async checkGroupAdmin(
     groupId: string,
     userId: string,
   ): Promise<void> {
@@ -605,6 +605,14 @@ export default class GroupService {
       throw new AppError("No groups created by this user", 404);
 
     return groups;
+  }
+  async checkGroupMembership(
+    userID: string,
+    groupID: string,
+  ): Promise<boolean> {
+    const memberRole = await this.repo.checkMemberRole(groupID, userID);
+    if (!memberRole) return false;
+    return true
   }
   static getInstance() {
     if (!GroupService.instance) {
