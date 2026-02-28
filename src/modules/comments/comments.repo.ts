@@ -15,8 +15,9 @@ export default class CommentsRepository {
   async deleteCommentById(cid: string): Promise<IComment | null> {
     return await commentModel.findByIdAndDelete(cid);
   }
-  async deleteRepliesByParentId(parentId: string): Promise<void> {
-    await commentModel.deleteMany({ parent: parentId });
+  async deleteRepliesByParentId(parentId: string): Promise<number> {
+    const result = await commentModel.deleteMany({ parent: parentId });
+    return result.deletedCount || 0;
   }
   async updateCommentById(cid: string, data: any): Promise<IComment | null> {
     return await commentModel.findByIdAndUpdate(cid, data , {new:true });
@@ -76,6 +77,27 @@ export default class CommentsRepository {
     return await commentModel.findByIdAndUpdate(
       cid,
       { $inc: { repliesCount: 1 } },
+      { new: true }
+    );
+  }
+  async decrementRepliesCount(cid: string): Promise<IComment | null> {
+    return await commentModel.findByIdAndUpdate(
+      cid,
+      { $inc: { repliesCount: -1 } },
+      { new: true }
+    );
+  }
+  async incrementReactionsCount(cid: string): Promise<IComment | null> {
+    return await commentModel.findByIdAndUpdate(
+      cid,
+      { $inc: { reactionsCount: 1 } },
+      { new: true }
+    );
+  }
+  async decrementReactionsCount(cid: string): Promise<IComment | null> {
+    return await commentModel.findByIdAndUpdate(
+      cid,
+      { $inc: { reactionsCount: -1 } },
       { new: true }
     );
   }

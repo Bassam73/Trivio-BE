@@ -28,6 +28,27 @@ export default class PostRepository {
       { new: true }
     );
   }
+  async decrementCommentsCount(id: string, count: number): Promise<IPost | null> {
+    return await postModel.findByIdAndUpdate(
+      id,
+      { $inc: { commentsCount: -count } },
+      { new: true }
+    );
+  }
+  async incrementReactionsCount(id: string, reaction: string): Promise<IPost | null> {
+    return await postModel.findByIdAndUpdate(
+      id,
+      { $inc: { [`reactionCounts.${reaction}`]: 1 } },
+      { new: true }
+    );
+  }
+  async decrementReactionsCount(id: string, reaction: string): Promise<IPost | null> {
+    return await postModel.findByIdAndUpdate(
+      id,
+      { $inc: { [`reactionCounts.${reaction}`]: -1 } },
+      { new: true }
+    );
+  }
   async getGroupPosts(groupId: string, searchQuery: any) {
     const apiFeatures = new ApiFeatures<IPost>(
       postModel.find({ location: "group", groupID: groupId }),

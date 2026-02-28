@@ -176,6 +176,15 @@ export default class PostService {
   async incrementCommentsCount(postId: string): Promise<IPost | null> {
     return await this.repo.incrementCommentsCount(postId);
   }
+  async decrementCommentsCount(postId: string, count: number): Promise<IPost | null> {
+    return await this.repo.decrementCommentsCount(postId, count);
+  }
+  async incrementReactionsCount(postId: string, reaction: string): Promise<IPost | null> {
+    return await this.repo.incrementReactionsCount(postId, reaction);
+  }
+  async decrementReactionsCount(postId: string, reaction: string): Promise<IPost | null> {
+    return await this.repo.decrementReactionsCount(postId, reaction);
+  }
   async getGroupPosts(
     groupId: string,
     query: string,

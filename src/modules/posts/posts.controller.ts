@@ -4,6 +4,7 @@ import PostService from "./posts.service";
 import { createPostDTO, IPost, updatePostDTO } from "../../types/post.types";
 import mongoose from "mongoose";
 import { createCommentDTO } from "../../types/comment.types";
+import AppError from "../../core/utils/AppError";
 
 const service = PostService.getInstace();
 
@@ -78,6 +79,31 @@ const getPostComments = catchError(
   },
 );
 
+import ReactsService from "../reacts/reacts.service";
+const reactsService = ReactsService.getInstance();
+
+const createPostReaction = catchError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.id;
+    if (!userId) throw new AppError("User not authenticated", 401);
+
+    const reaction = await reactsService.createReaction({
+      userId,
+      modelId: req.params.id,
+      onModel: "post",
+      reaction: req.body.reaction,
+    });
+    res.status(201).json({ status: "success", data: { reaction } });
+  }
+);
+
+const getPostReactions = catchError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const reactions = await reactsService.getReactionsByModelId(req.params.id, req.query);
+    res.status(200).json({ status: "success", data: reactions });
+  }
+);
+
 export {
   createPost,
   getPublicPosts,
@@ -86,4 +112,6 @@ export {
   updatePostById,
   createComment,
   getPostComments,
+  createPostReaction,
+  getPostReactions,
 };
