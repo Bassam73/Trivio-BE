@@ -93,3 +93,28 @@ export const getReplies = catchError(
     });
   }
 );
+
+import ReactsService from "../reacts/reacts.service";
+const reactsService = ReactsService.getInstance();
+
+export const createCommentReaction = catchError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.id;
+    if (!userId) throw new AppError("User not authenticated", 401);
+
+    const reaction = await reactsService.createReaction({
+      userId,
+      modelId: req.params.cid,
+      onModel: "comment",
+      reaction: req.body.reaction,
+    });
+    res.status(201).json({ status: "success", data: { reaction } });
+  }
+);
+
+export const getCommentReactions = catchError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const reactions = await reactsService.getReactionsByModelId(req.params.cid, req.query);
+    res.status(200).json({ status: "success", data: reactions });
+  }
+);

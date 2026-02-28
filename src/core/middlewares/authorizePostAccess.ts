@@ -8,6 +8,8 @@ import { IPost, PostType } from "../../types/post.types";
 import FollowService from "../../modules/follow/follow.service";
 import { FollowStauts } from "../../types/follow.types";
 import GroupService from "../../modules/groups/groups.service";
+import reactionModel from "../../database/models/reaction.model";
+
 const commentsService = CommentsService.getInstance();
 const postService = PostService.getInstace();
 const followService = FollowService.getInstance();
@@ -16,6 +18,17 @@ const authorizePostAccess = catchError(
   async (req: Request, res: Response, next: NextFunction) => {
     let { id, cid } = req.params;
     let userID = req.user?.id;
+
+    if (req.baseUrl === "/api/v1/reacts" && id) {
+      const reaction = await reactionModel.findById(id);
+      if (!reaction) throw new AppError("Reaction not found", 404);
+      if (reaction.onModel === "comment") {
+        cid = reaction.modelId.toString();
+        id = undefined as any;
+      } else {
+        id = reaction.modelId.toString();
+      }
+    }
 
     if (!id && cid) {
       const comment: IComment | null = await commentsService.getCommentByID(cid);

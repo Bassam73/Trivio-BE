@@ -15,10 +15,13 @@ import {
   getPublicPostsById,
   updatePostById,
   getPostComments,
+  createPostReaction,
+  getPostReactions,
 } from "./posts.controller";
 import authorizePostAccess from "../../core/middlewares/authorizePostAccess";
 
 const validator = valid.createValidator();
+import { createReactionSchema } from "../reacts/reacts.validation";
 
 const postsRouter = express.Router();
 
@@ -55,6 +58,22 @@ postsRouter
     updatePostById,
   )
   .delete(protectedRoutes, validator.params(paramsIdVal), deletePostById);
+
+postsRouter
+  .route("/:id/reacts")
+  .post(
+    protectedRoutes,
+    authorizePostAccess,
+    validator.params(paramsIdVal),
+    validator.body(createReactionSchema),
+    createPostReaction
+  )
+  .get(
+    protectedRoutes,
+    authorizePostAccess,
+    validator.params(paramsIdVal),
+    getPostReactions
+  );
 
 
 export default postsRouter;

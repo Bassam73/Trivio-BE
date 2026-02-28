@@ -146,11 +146,18 @@ export default class CommentsService {
       throw new AppError("You are not authorized to delete this comment", 403);
     }
 
-    // Delete replies
-    await this.repo.deleteRepliesByParentId(cid);
+    let deletedRepliesCount = 0;
 
-    // Delete comment
+    if (comment.parent) {
+      await this.repo.decrementRepliesCount(comment.parent.toString());
+    } else {
+      deletedRepliesCount = await this.repo.deleteRepliesByParentId(cid);
+    }
     await this.repo.deleteCommentById(cid);
+    await this.postService.decrementCommentsCount(
+      comment.postId.toString(),
+      1 + deletedRepliesCount
+    );
   }
 
   static getInstance() {

@@ -7,8 +7,11 @@ import {
   updateComment,
   createReply,
   getReplies,
+  createCommentReaction,
+  getCommentReactions,
 } from "./comments.controller";
 import { createReplySchema, updateCommentSchema } from "./comments.validation";
+import { createReactionSchema } from "../reacts/reacts.validation";
 import protectedRoutes from "../../core/middlewares/protectedRoutes";
 const validator = valid.createValidator();
 const commentsRouter = express.Router();
@@ -26,5 +29,12 @@ commentsRouter.route("/:cid/replies").post(
   authorizePostAccess,
   createReply,
 ).get(protectedRoutes, authorizePostAccess, getReplies);
+
+commentsRouter.route("/:cid/reacts").post(
+  protectedRoutes,
+  authorizePostAccess,
+  validator.body(createReactionSchema),
+  createCommentReaction
+).get(protectedRoutes, authorizePostAccess, getCommentReactions);
 
 export default commentsRouter;
