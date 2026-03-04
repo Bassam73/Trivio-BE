@@ -12,7 +12,7 @@ import PostRepository from "./posts.repo";
 import axios from "axios";
 import fs from "fs";
 import getMentionedUsers from "../../core/utils/mentionedUsers";
-import filterQueue from "../../jobs/queues/filterQueue";
+// import filterQueue from "../../jobs/queues/filterQueue";
 import ApiFeatures from "../../core/utils/ApiFeatures";
 import { FilterType, PaginationResult } from "../../types/global";
 import { createCommentDTO, IComment } from "../../types/comment.types";
@@ -53,11 +53,18 @@ export default class PostService {
       console.time("DB Save");
       const post = await this.repo.createPost(data);
       if (data.caption)
+<<<<<<< ashraf
+        // filterQueue.add("check-filter", {
+        //   postID: post._id as string,
+        //   caption: data.caption,
+        // });
+=======
         filterQueue.add("check-filter", {
           id: post._id as string,
           caption: data.caption,
           filterType: FilterType.post,
         });
+>>>>>>> main
       console.timeEnd("DB Save");
       console.timeEnd("Total Logic Time");
 
@@ -131,11 +138,18 @@ export default class PostService {
         type: data.updatedData.type,
       });
     }
+<<<<<<< ashraf
+    // filterQueue.add("check-filter", {
+    //   postID: data.postID.toString(),
+    //   caption: data.updatedData.caption,
+    // });
+=======
     filterQueue.add("check-filter", {
       id: data.postID.toString(),
       caption: data.updatedData.caption,
       filterType: FilterType.post,
     });
+>>>>>>> main
     const updates: any = {
       caption: data.updatedData.caption,
       type: data.updatedData.type,
@@ -167,6 +181,17 @@ export default class PostService {
     return deletedPost;
   }
 
+<<<<<<< ashraf
+  async getUsersPosts(userId: string, page: number, limit: number): Promise<IPost[]> {
+    return await this.repo.findPostsByUserId(userId, page, limit) as IPost[];
+  }
+
+  async getPostsByIds(postIds: string[]): Promise<IPost[]> {
+    return await this.repo.findPostsByIds(postIds);
+  }
+
+
+=======
   async createComment(postID: createCommentDTO): Promise<IComment> {
     return await CommentsService.getInstance().createComment(postID);
   }
@@ -185,6 +210,7 @@ export default class PostService {
   async decrementReactionsCount(postId: string, reaction: string): Promise<IPost | null> {
     return await this.repo.decrementReactionsCount(postId, reaction);
   }
+>>>>>>> main
   async getGroupPosts(
     groupId: string,
     query: string,

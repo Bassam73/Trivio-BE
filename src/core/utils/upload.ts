@@ -15,6 +15,8 @@ const storage = multer.diskStorage({
       }else{
         uploadPath = path.join(__dirname, "../../../uploads/groups");
       }
+    } else {
+      uploadPath = path.join(__dirname, "../../../uploads/avatars");
     }
     fs.mkdirSync(uploadPath, { recursive: true });
 

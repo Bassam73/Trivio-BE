@@ -1,7 +1,5 @@
 import mongoose, { Model, Schema } from "mongoose";
 import { IUser } from "../../types/user.types";
-import { maxHeaderSize } from "http";
-import { boolean, number, required } from "joi";
 
 const schema: Schema<IUser> = new Schema<IUser>(
   {
@@ -9,7 +7,7 @@ const schema: Schema<IUser> = new Schema<IUser>(
       type: String,
       required: true,
       minlength: 3,
-      maxHeaderSize: 20,
+      maxlength: 20,
       unique: true,
     },
     role: {
@@ -32,8 +30,6 @@ const schema: Schema<IUser> = new Schema<IUser>(
     },
     code: {
       type: Number,
-      minLength: 6,
-      maxLength: 6,
       required: true,
     },
     codeCreatedAt: {
@@ -73,11 +69,26 @@ const schema: Schema<IUser> = new Schema<IUser>(
     },
     favTeams: {
       type: [String],
+      default: [],
     },
+    favPlayers: {
+      type: [String],
+      default: [],
+    },
+    bio: {
+      type: String,
+      maxlength: 300,
+    },
+    avatar: {
+      type: String,
+      // default: `${process.env.BASE_URL || "http://localhost:3500"}/uploads/avatars/default-avatar.png`,
+    },
+    
   },
   {
     timestamps: true,
     toJSON: {
+      virtuals: true,
       transform(doc, ret) {
         delete ret.password;
         delete ret.code;
@@ -87,8 +98,15 @@ const schema: Schema<IUser> = new Schema<IUser>(
         return ret;
       },
     },
+    toObject: { virtuals: true },
   }
 );
+
+schema.virtual("likedPosts", {
+  ref: "like",
+  localField: "_id",
+  foreignField: "user",
+});
 
 const userModel = mongoose.model("user", schema);
 export default userModel;
