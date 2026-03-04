@@ -70,7 +70,6 @@ export const getMe = catchError(async (req: Request, res: Response) => {
   res.status(200).json({ status: "success", data: { user } });
 });
 
-<<<<<<< ashraf
 
 export const getLikePostsID = catchError(async (req: Request, res: Response) => {
   const id = req.user?._id as string;
@@ -184,7 +183,6 @@ export const suggestUsers = catchError(async (req: Request, res: Response) => {
 //---------------------------------------------------
 
 //18- get feed --> recommender system
-=======
 export const getMyJoinedGroups = catchError(
   async (req: Request, res: Response) => {
     const groups = await service.getMyJoinedGroups(req.user?.id as string);
@@ -196,4 +194,3 @@ export const getMyGroups = catchError(async (req: Request, res: Response) => {
   const groups = await service.getMyGroups(req.user?.id as string);
   res.status(200).json({ status: "success", data: { groups } });
 });
->>>>>>> main
