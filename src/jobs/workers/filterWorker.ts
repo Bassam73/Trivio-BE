@@ -2,15 +2,14 @@ import axios from "axios";
 import { Job, Worker } from "bullmq";
 import { ToxicityFlags } from "../../types/post.types";
 import PostService from "../../modules/posts/posts.service";
-
-interface FilterJobData {
-  postID: string;
-  caption: string;
-}
+import CommentsService from "../../modules/comments/comments.service";
+import { FilterJobData } from "../../types/global";
 
 const filterProcessor = async (job: Job<FilterJobData>): Promise<void> => {
-  const { postID, caption } = job.data;
-  console.log(`[Filter Worker] Starting toxicity check for post: ${postID}`);
+  const { id, caption, filterType } = job.data;
+  console.log(
+    `[Filter Worker] Starting toxicity check for ${filterType}: ${id}`,
+  );
 
   let result: ToxicityFlags;
 
@@ -19,11 +18,11 @@ const filterProcessor = async (job: Job<FilterJobData>): Promise<void> => {
       process.env.TOXICITY_MODEL_URL as string,
       {
         text: caption,
-      }
+      },
     );
     const modelResult: string = response.data.result;
     console.log(
-      `[Filter Worker] Model returned: "${modelResult}" for post: ${postID}`
+      `[Filter Worker] Model returned: "${modelResult}" for ${filterType}: ${id}`,
     );
 
     if (modelResult.includes("safe")) {
@@ -34,11 +33,15 @@ const filterProcessor = async (job: Job<FilterJobData>): Promise<void> => {
       result = ToxicityFlags.flagged;
     }
 
-    await PostService.getInstace().checkToxicity(result, postID);
+    if (filterType === "post") {
+      await PostService.getInstace().checkToxicity(result, id);
+    } else if (filterType === "comment") {
+      await CommentsService.getInstance().checkToxicity(result, id);
+    }
   } catch (error) {
     console.error(
-      `[Filter Worker] Error calling toxicity model for post ${postID}:`,
-      error
+      `[Filter Worker] Error calling toxicity model for ${filterType} ${id}:`,
+      error,
     );
     throw error;
   }
@@ -57,13 +60,13 @@ export const setupFilterWorker = () => {
 
   worker.on("completed", (job: Job, returnValue: any) => {
     console.log(
-      `[Filter Worker] Job ${job.id} for post ${job.data.postID} completed.`
+      `[Filter Worker] Job ${job.id} for post ${job.data.id} completed.`,
     );
   });
 
   worker.on("failed", (job, err) => {
     console.error(
-      `❌ Filter job ${job?.id} failed for post ${job?.data.postID} with error: ${err.message}`
+      `❌ Filter job ${job?.id} failed for post ${job?.data.id} with error: ${err.message}`,
     );
   });
   return worker;

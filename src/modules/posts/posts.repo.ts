@@ -21,6 +21,34 @@ export default class PostRepository {
   async updatePostById(id: string, data: any): Promise<IPost | null> {
     return await postModel.findByIdAndUpdate(id, data, { new: true });
   }
+  async incrementCommentsCount(id: string): Promise<IPost | null> {
+    return await postModel.findByIdAndUpdate(
+      id,
+      { $inc: { commentsCount: 1 } },
+      { new: true }
+    );
+  }
+  async decrementCommentsCount(id: string, count: number): Promise<IPost | null> {
+    return await postModel.findByIdAndUpdate(
+      id,
+      { $inc: { commentsCount: -count } },
+      { new: true }
+    );
+  }
+  async incrementReactionsCount(id: string, reaction: string): Promise<IPost | null> {
+    return await postModel.findByIdAndUpdate(
+      id,
+      { $inc: { [`reactionCounts.${reaction}`]: 1 } },
+      { new: true }
+    );
+  }
+  async decrementReactionsCount(id: string, reaction: string): Promise<IPost | null> {
+    return await postModel.findByIdAndUpdate(
+      id,
+      { $inc: { [`reactionCounts.${reaction}`]: -1 } },
+      { new: true }
+    );
+  }
   async getGroupPosts(groupId: string, searchQuery: any) {
     const apiFeatures = new ApiFeatures<IPost>(
       postModel.find({ location: "group", groupID: groupId }),
@@ -61,6 +89,9 @@ export default class PostRepository {
         populate: { path: "authorID", select: "username avatar" }
       })
       .exec();
+  }
+  async getPostByID(id: string): Promise<IPost | null> {
+    return await postModel.findById(id);
   }
   static getInstace() {
     if (!PostRepository.instance) {

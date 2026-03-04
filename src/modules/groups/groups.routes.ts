@@ -187,5 +187,4 @@ groupRouter
     updateGroupPost,
   )
   .get(protectedRoutes, validator.params(paramsGroupPostVal), getGroupPostById);
-
 export default groupRouter;

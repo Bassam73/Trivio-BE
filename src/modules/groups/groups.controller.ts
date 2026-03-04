@@ -299,3 +299,4 @@ export const getGroupFeed = catchError(async (req: Request, res: Response) => {
   const posts = await service.getGroupFeed(req.user?.id as string);
   res.status(200).json({ status: "success", data: { posts } });
 });
+

@@ -3,6 +3,7 @@ import { FollowStauts, IFollow } from "../../types/follow.types";
 import { IUser, UserPrivacy } from "../../types/user.types";
 import FollowService from "../follow/follow.service";
 import PostService from "../posts/posts.service";
+import GroupService from "../groups/groups.service";
 import UsersRepository from "./users.repo";
 
 import bcrypt from "bcrypt";
@@ -12,10 +13,17 @@ export default class UsersService {
   private repo: UsersRepository;
   private followSerivce: FollowService;
   private postService: PostService;
-  constructor(repo: UsersRepository, followService: FollowService, postService: PostService) {
+  private groupService: GroupService;
+  constructor(
+    repo: UsersRepository,
+    followService: FollowService,
+    groupService: GroupService,
+    postService:PostService
+  ) {
     this.repo = repo;
     this.followSerivce = followService;
-    this.postService = postService
+    this.groupService = groupService;
+    this.postService = postService;
   }
 
   async followUser(userID: string, followerID: string): Promise<IFollow> {
@@ -51,16 +59,30 @@ export default class UsersService {
     }
   }
 
-  async getFollowers(userId: string, page: number, limit: number): Promise<IFollow[]> {
+  async getFollowers(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<IFollow[]> {
     return await this.followSerivce.getFollowers(userId, page, limit);
   }
 
-  async getFollowing(userId: string, page: number, limit: number): Promise<IFollow[]> {
+  async getFollowing(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<IFollow[]> {
     return await this.followSerivce.getFollowing(userId, page, limit);
   }
 
-  async getRelationshipStatus(targetUserId: string, currentUserId: string): Promise<string> {
-    return await this.followSerivce.getRelationshipStatus(currentUserId, targetUserId);
+  async getRelationshipStatus(
+    targetUserId: string,
+    currentUserId: string,
+  ): Promise<string> {
+    return await this.followSerivce.getRelationshipStatus(
+      currentUserId,
+      targetUserId,
+    );
   }
 
   async getMe(userId: string): Promise<IUser> {
@@ -209,12 +231,20 @@ export default class UsersService {
     return suggestions;
   }
 
+  async getMyJoinedGroups(userID: string) {
+    return await this.groupService.getUserJoinedGroups(userID);
+  }
+
+  async getMyGroups(userID: string) {
+    return await this.groupService.getMyGroups(userID);
+  }
   static getInstance() {
     if (!UsersService.instance) {
       UsersService.instance = new UsersService(
         UsersRepository.getInstance(),
         FollowService.getInstance(),
         PostService.getInstace(),
+        GroupService.getInstance(),
       );
     }
     return UsersService.instance;

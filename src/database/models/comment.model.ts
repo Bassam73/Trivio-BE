@@ -1,5 +1,6 @@
 import mongoose, { mongo, Schema } from "mongoose";
 import { IComment } from "../../types/comment.types";
+import { boolean } from "joi";
 
 const schema: Schema<IComment> = new Schema<IComment>(
   {
@@ -30,6 +31,10 @@ const schema: Schema<IComment> = new Schema<IComment>(
     reactionsCount: {
       type: Number,
       default: 0,
+    },
+    flagged: {
+      type: Boolean,
+      default: false,
     },
   },
   {

@@ -52,10 +52,16 @@ const schema: Schema<IPost> = new Schema<IPost>(
       type: Boolean,
       default: false,
     },
+<<<<<<< ashraf
     tags:{
       type: [String],
       index: true,
       default: [],
+=======
+    commentsCount: {
+      type:Number,
+      default:0
+>>>>>>> main
     },
     reactionCounts: {
       like: { type: Number, default: 0 },

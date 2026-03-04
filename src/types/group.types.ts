@@ -19,7 +19,7 @@ export enum JoinStatus {
 }
 export interface IGroup extends Document {
   name: string;
-  description: string;
+  description?: string;
   logo?: string;
   members: number;
   admins: number;
@@ -46,7 +46,7 @@ export interface IJoinRequest {
 
 export interface createGroupDTO {
   name: string;
-  description: string;
+  description?: string;
   privacy: GroupPrivacy;
   logo?: string;
   tags?: string[];

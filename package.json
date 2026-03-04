@@ -46,6 +46,7 @@
     "mongoose": "^8.18.2",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
-    "nodemailer": "^7.0.6"
+    "nodemailer": "^7.0.6",
+    "tslib": "^2.8.1"
   }
 }

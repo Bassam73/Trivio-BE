@@ -460,7 +460,7 @@ export default class GroupService {
     return await this.repo.getMembers(groupId, query, "moderator", "active");
   }
 
-  private async checkGroupAdmin(
+  public async checkGroupAdmin(
     groupId: string,
     userId: string,
   ): Promise<void> {
@@ -585,6 +585,34 @@ export default class GroupService {
     if (!posts) throw new AppError("Posts not Found", 404);
     const shuffledPosts = this.shufflePosts(posts);
     return shuffledPosts;
+  }
+
+  async getUserJoinedGroups(userID: string) {
+    const memberships = await this.repo.getUsersJoinedGroups(userID);
+    if (memberships.length == 0)
+      throw new AppError("No groups found for this user", 404);
+
+    const groups = memberships.map((membership) => {
+      return membership.groupId;
+    });
+    console.log(groups);
+    return groups;
+  }
+
+  async getMyGroups(userID: string) {
+    const groups = await this.repo.getMyGroups(userID);
+    if (groups.length == 0)
+      throw new AppError("No groups created by this user", 404);
+
+    return groups;
+  }
+  async checkGroupMembership(
+    userID: string,
+    groupID: string,
+  ): Promise<boolean> {
+    const memberRole = await this.repo.checkMemberRole(groupID, userID);
+    if (!memberRole) return false;
+    return true
   }
   static getInstance() {
     if (!GroupService.instance) {

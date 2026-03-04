@@ -14,12 +14,15 @@ import fs from "fs";
 import getMentionedUsers from "../../core/utils/mentionedUsers";
 // import filterQueue from "../../jobs/queues/filterQueue";
 import ApiFeatures from "../../core/utils/ApiFeatures";
-import { PaginationResult } from "../../types/global";
+import { FilterType, PaginationResult } from "../../types/global";
+import { createCommentDTO, IComment } from "../../types/comment.types";
+import CommentsService from "../comments/comments.service";
 
 export default class PostService {
   private static instance: PostService;
   private repo: PostRepository;
   private userRepo: AuthRepository;
+
   constructor(repo: PostRepository, userRepo: AuthRepository) {
     this.repo = repo;
     this.userRepo = userRepo;
@@ -50,10 +53,18 @@ export default class PostService {
       console.time("DB Save");
       const post = await this.repo.createPost(data);
       if (data.caption)
+<<<<<<< ashraf
         // filterQueue.add("check-filter", {
         //   postID: post._id as string,
         //   caption: data.caption,
         // });
+=======
+        filterQueue.add("check-filter", {
+          id: post._id as string,
+          caption: data.caption,
+          filterType: FilterType.post,
+        });
+>>>>>>> main
       console.timeEnd("DB Save");
       console.timeEnd("Total Logic Time");
 
@@ -84,7 +95,9 @@ export default class PostService {
     if (post.type !== "public") throw new AppError("post is not public", 403);
     return post;
   }
-
+  async getPostbyId(id: string): Promise<IPost | null> {
+    return await this.repo.getPostByID(id);
+  }
   async deletePostById(postId: string, userId: mongoose.Types.ObjectId) {
     const post = await this.repo.getPostById(postId);
     if (!post) throw new AppError("post not found", 404);
@@ -125,10 +138,18 @@ export default class PostService {
         type: data.updatedData.type,
       });
     }
+<<<<<<< ashraf
     // filterQueue.add("check-filter", {
     //   postID: data.postID.toString(),
     //   caption: data.updatedData.caption,
     // });
+=======
+    filterQueue.add("check-filter", {
+      id: data.postID.toString(),
+      caption: data.updatedData.caption,
+      filterType: FilterType.post,
+    });
+>>>>>>> main
     const updates: any = {
       caption: data.updatedData.caption,
       type: data.updatedData.type,
@@ -160,6 +181,7 @@ export default class PostService {
     return deletedPost;
   }
 
+<<<<<<< ashraf
   async getUsersPosts(userId: string, page: number, limit: number): Promise<IPost[]> {
     return await this.repo.findPostsByUserId(userId, page, limit) as IPost[];
   }
@@ -169,6 +191,26 @@ export default class PostService {
   }
 
 
+=======
+  async createComment(postID: createCommentDTO): Promise<IComment> {
+    return await CommentsService.getInstance().createComment(postID);
+  }
+  async getPostComments(postId: string, query: any): Promise<PaginationResult<IComment>> {
+    return await CommentsService.getInstance().getPostComments(postId, query);
+  }
+  async incrementCommentsCount(postId: string): Promise<IPost | null> {
+    return await this.repo.incrementCommentsCount(postId);
+  }
+  async decrementCommentsCount(postId: string, count: number): Promise<IPost | null> {
+    return await this.repo.decrementCommentsCount(postId, count);
+  }
+  async incrementReactionsCount(postId: string, reaction: string): Promise<IPost | null> {
+    return await this.repo.incrementReactionsCount(postId, reaction);
+  }
+  async decrementReactionsCount(postId: string, reaction: string): Promise<IPost | null> {
+    return await this.repo.decrementReactionsCount(postId, reaction);
+  }
+>>>>>>> main
   async getGroupPosts(
     groupId: string,
     query: string,
