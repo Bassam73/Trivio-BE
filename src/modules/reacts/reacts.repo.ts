@@ -23,6 +23,11 @@ export default class ReactsRepository {
     return await reactionModel.findByIdAndDelete(id);
   }
 
+  async deleteReactionsByModelId(modelId: string): Promise<number> {
+    const result = await reactionModel.deleteMany({ modelId });
+    return result.deletedCount || 0;
+  }
+
   async updateReactionById(id: string, data: any): Promise<IReaction | null> {
     return await reactionModel.findByIdAndUpdate(id, data, { new: true });
   }

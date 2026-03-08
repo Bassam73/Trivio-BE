@@ -1,7 +1,13 @@
 import express from "express";
 import valid from "express-joi-validation";
 import protectedRoutes from "../../core/middlewares/protectedRoutes";
-import { changePasswordVal, paramsIdVal, removeFavPlayerVal, removeFavTeamVal, updateProfileVal } from "./users.validation";
+import {
+  changePasswordVal,
+  paramsIdVal,
+  removeFavPlayerVal,
+  removeFavTeamVal,
+  updateProfileVal,
+} from "./users.validation";
 import { uploadImage } from "../../core/utils/upload";
 
 import {
@@ -23,7 +29,7 @@ import {
   removeFavPlayer,
   removeFavTeam,
   changePassword,
-  suggestUsers
+  suggestUsers,
   getMyJoinedGroups,
   getMyGroups,
 } from "./users.controller";
@@ -45,18 +51,35 @@ usersRouter.get("/me/likedPosts", protectedRoutes, getLikedPosts);
 usersRouter.get("/me/saved-posts", protectedRoutes, getSavedPosts);
 usersRouter.get("/me/posts", protectedRoutes, getUserPosts);
 
-
 usersRouter.get("/me/favTeams", protectedRoutes, getFavTeams);
 usersRouter.get("/me/favPlayers", protectedRoutes, getFavPlayers);
 
-usersRouter.patch("/me/removeFavPlayer", protectedRoutes,validator.body(removeFavPlayerVal), removeFavPlayer);
-usersRouter.patch("/me/removeFavTeam", protectedRoutes,validator.body(removeFavTeamVal) ,removeFavTeam);
-usersRouter.patch("/me/changePassword", protectedRoutes,validator.body(changePasswordVal) ,changePassword);
+usersRouter.patch(
+  "/me/removeFavPlayer",
+  protectedRoutes,
+  validator.body(removeFavPlayerVal),
+  removeFavPlayer,
+);
+usersRouter.patch(
+  "/me/removeFavTeam",
+  protectedRoutes,
+  validator.body(removeFavTeamVal),
+  removeFavTeam,
+);
+usersRouter.patch(
+  "/me/changePassword",
+  protectedRoutes,
+  validator.body(changePasswordVal),
+  changePassword,
+);
 
-
-
-usersRouter.patch("/me/updateProfile", protectedRoutes,
-  uploadImage.fields([{ name: "avatar", maxCount: 1 }]), validator.body(updateProfileVal), updateProfile);
+usersRouter.patch(
+  "/me/updateProfile",
+  protectedRoutes,
+  uploadImage.fields([{ name: "avatar", maxCount: 1 }]),
+  validator.body(updateProfileVal),
+  updateProfile,
+);
 
 usersRouter.get(
   "/:id/followers",

@@ -19,6 +19,16 @@ export default class CommentsRepository {
     const result = await commentModel.deleteMany({ parent: parentId });
     return result.deletedCount || 0;
   }
+  async getAllRepliesByCommentId(cid: string): Promise<IComment[]> {
+    return await commentModel.find({ parent: cid });
+  }
+  async getAllCommentsByPostId(postId: string): Promise<IComment[]> {
+    return await commentModel.find({ postId });
+  }
+  async deleteCommentsByPostId(postId: string): Promise<number> {
+    const result = await commentModel.deleteMany({ postId });
+    return result.deletedCount || 0;
+  }
   async updateCommentById(cid: string, data: any): Promise<IComment | null> {
     return await commentModel.findByIdAndUpdate(cid, data , {new:true });
   }

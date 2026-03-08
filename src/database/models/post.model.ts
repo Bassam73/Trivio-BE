@@ -52,14 +52,14 @@ const schema: Schema<IPost> = new Schema<IPost>(
       type: Boolean,
       default: false,
     },
-    tags:{
+    tags: {
       type: [String],
       index: true,
       default: [],
-        }
+    },
     commentsCount: {
-      type:Number,
-      default:0
+      type: Number,
+      default: 0,
     },
     reactionCounts: {
       like: { type: Number, default: 0 },

@@ -16,11 +16,8 @@ export interface IPost {
   groupID?: mongoose.Types.ObjectId;
   views?: number;
   flagged?: boolean;
-<<<<<<< ashraf
   tags?: [string];
-=======
   commentsCount: number;
->>>>>>> main
   reactionCounts: {
     like: number;
     love: number;

@@ -12,6 +12,7 @@ import { FilterType, PaginationResult } from "../../types/global";
 import AppError from "../../core/utils/AppError";
 import PostService from "../posts/posts.service";
 import GroupService from "../groups/groups.service";
+import ReactsRepository from "../reacts/reacts.repo";
 
 export default class CommentsService {
   private static instance: CommentsService;
@@ -150,7 +151,17 @@ export default class CommentsService {
 
     if (comment.parent) {
       await this.repo.decrementRepliesCount(comment.parent.toString());
+      await ReactsRepository.getInstance().deleteReactionsByModelId(cid);
     } else {
+      const replies = await this.repo.getAllRepliesByCommentId(cid);
+      await Promise.all(
+        replies.map((reply) =>
+          ReactsRepository.getInstance().deleteReactionsByModelId(
+            reply._id as string,
+          ),
+        ),
+      );
+      await ReactsRepository.getInstance().deleteReactionsByModelId(cid);
       deletedRepliesCount = await this.repo.deleteRepliesByParentId(cid);
     }
     await this.repo.deleteCommentById(cid);

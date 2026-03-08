@@ -8,6 +8,7 @@ import { FilterType } from "../../types/global";
 import filterQueue from "../../jobs/queues/filterQueue";
 import AppError from "../../core/utils/AppError";
 import mongoose from "mongoose";
+import ReactsRepository from "../reacts/reacts.repo";
 
 // Mock dependencies
 jest.mock("./comments.repo");
@@ -223,6 +224,9 @@ describe("CommentsService", () => {
     it("should delete comment if user is author", async () => {
       commentsRepo.getCommentById.mockResolvedValue(mockComment);
       postService.getPostbyId.mockResolvedValue(mockPost);
+      commentsRepo.getAllRepliesByCommentId = jest.fn().mockResolvedValue([]);
+      
+      jest.spyOn(ReactsRepository.getInstance(), "deleteReactionsByModelId").mockResolvedValue(1);
 
       await commentsService.deleteComment(
         "66144e138a7c2957b8979373",
@@ -239,6 +243,9 @@ describe("CommentsService", () => {
 
     it("should delete comment if user is group admin", async () => {
       commentsRepo.getCommentById.mockResolvedValue(mockComment);
+      commentsRepo.getAllRepliesByCommentId = jest.fn().mockResolvedValue([]);
+      jest.spyOn(ReactsRepository.getInstance(), "deleteReactionsByModelId").mockResolvedValue(1);
+      
       const groupPost: IPost = {
         ...mockPost,
         groupID: new mongoose.Types.ObjectId("66144e138a7c2957b8979377"),

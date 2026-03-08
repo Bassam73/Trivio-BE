@@ -17,7 +17,7 @@ export default class GroupRepository {
   private constructor() {}
 
   async createGroup(data: createGroupDTO): Promise<IGroup> {
-    return await groupModel.create(data);
+    return await groupModel.create({ ...data, admins: 1, members: 1 });
   }
   async getGroupById(id: string): Promise<IGroup | null> {
     return await groupModel.findById(id);

@@ -25,33 +25,44 @@ export default class PostRepository {
     return await postModel.findByIdAndUpdate(
       id,
       { $inc: { commentsCount: 1 } },
-      { new: true }
+      { new: true },
     );
   }
-  async decrementCommentsCount(id: string, count: number): Promise<IPost | null> {
+  async decrementCommentsCount(
+    id: string,
+    count: number,
+  ): Promise<IPost | null> {
     return await postModel.findByIdAndUpdate(
       id,
       { $inc: { commentsCount: -count } },
-      { new: true }
+      { new: true },
     );
   }
-  async incrementReactionsCount(id: string, reaction: string): Promise<IPost | null> {
+  async incrementReactionsCount(
+    id: string,
+    reaction: string,
+  ): Promise<IPost | null> {
     return await postModel.findByIdAndUpdate(
       id,
       { $inc: { [`reactionCounts.${reaction}`]: 1 } },
-      { new: true }
+      { new: true },
     );
   }
-  async decrementReactionsCount(id: string, reaction: string): Promise<IPost | null> {
+  async decrementReactionsCount(
+    id: string,
+    reaction: string,
+  ): Promise<IPost | null> {
     return await postModel.findByIdAndUpdate(
       id,
       { $inc: { [`reactionCounts.${reaction}`]: -1 } },
-      { new: true }
+      { new: true },
     );
   }
   async getGroupPosts(groupId: string, searchQuery: any) {
     const apiFeatures = new ApiFeatures<IPost>(
-      postModel.find({ location: "group", groupID: groupId }),
+      postModel
+        .find({ location: "group", groupID: groupId })
+        .populate("groupID"),
       searchQuery,
     )
       .filter()
@@ -67,26 +78,35 @@ export default class PostRepository {
     return reuslt;
   }
 
+  async getPostsByGroupId(groupId: string): Promise<IPost[]> {
+    return await postModel.find({ location: "group", groupID: groupId });
+  }
+
   async findPostsByIds(postIds: string[]) {
-    return await postModel.find({ 
-      _id: { $in: postIds } 
+    return await postModel.find({
+      _id: { $in: postIds },
     });
   }
-  async findPostsByUserId(userId: string, page: number, limit: number): Promise<IPost[]> {
-    return await postModel.find({ 
+  async findPostsByUserId(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<IPost[]> {
+    return await postModel
+      .find({
         authorID: userId,
-        location: "profile" 
+        location: "profile",
       })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .populate({
         path: "authorID",
-        select: "username avatar" 
+        select: "username avatar",
       })
       .populate({
         path: "sharedFrom",
-        populate: { path: "authorID", select: "username avatar" }
+        populate: { path: "authorID", select: "username avatar" },
       })
       .exec();
   }

@@ -12,6 +12,7 @@ import GroupRepository from "./groups.repo";
 import fs, { appendFile } from "fs";
 import mongo from "mongoose";
 import PostService from "../posts/posts.service";
+import PostRepository from "../posts/posts.repo";
 import { createPostDTO, IPost, updatePostDTO } from "../../types/post.types";
 import { post } from "axios";
 export default class GroupService {
@@ -48,6 +49,11 @@ export default class GroupService {
     if (group.creatorId.toString() != userID) {
       throw new AppError("you are not authorized to delete this group", 403);
     }
+
+    const posts = await PostRepository.getInstace().getPostsByGroupId(id);
+    await Promise.all(
+      posts.map((post) => this.postService.deleteGroupPost(post._id as string))
+    );
 
     await this.repo.deleteGroupById(id);
     await this.repo.deleteMembersByGroupId(id);

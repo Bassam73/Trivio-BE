@@ -3,6 +3,7 @@ import GroupRepository from "./groups.repo";
 import fs from "fs";
 import AppError from "../../core/utils/AppError";
 import { createGroupDTO, updateGroupDTO } from "../../types/group.types";
+import PostRepository from "../posts/posts.repo";
 
 // Mock dependencies
 jest.mock("./groups.repo");
@@ -95,6 +96,9 @@ describe("GroupService", () => {
     it("should delete group and associated data if authorized", async () => {
       repoMock.getGroupById.mockResolvedValue(mockGroup as any);
       repoMock.deleteGroupById.mockResolvedValue(mockGroup as any);
+      
+      jest.spyOn(PostRepository.getInstace(), "getPostsByGroupId").mockResolvedValue([{ _id: "post123" }] as any);
+      service["postService"]["deleteGroupPost"] = jest.fn().mockResolvedValue(undefined); // Mock cascading deletion specifically
 
       await service.deleteGroup(groupId, userId);
 

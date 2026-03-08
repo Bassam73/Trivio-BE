@@ -12,11 +12,13 @@ import PostRepository from "./posts.repo";
 import axios from "axios";
 import fs from "fs";
 import getMentionedUsers from "../../core/utils/mentionedUsers";
-// import filterQueue from "../../jobs/queues/filterQueue";
+import filterQueue from "../../jobs/queues/filterQueue";
 import ApiFeatures from "../../core/utils/ApiFeatures";
 import { FilterType, PaginationResult } from "../../types/global";
 import { createCommentDTO, IComment } from "../../types/comment.types";
 import CommentsService from "../comments/comments.service";
+import CommentsRepository from "../comments/comments.repo";
+import ReactsRepository from "../reacts/reacts.repo";
 
 export default class PostService {
   private static instance: PostService;
@@ -53,18 +55,11 @@ export default class PostService {
       console.time("DB Save");
       const post = await this.repo.createPost(data);
       if (data.caption)
-<<<<<<< ashraf
-        // filterQueue.add("check-filter", {
-        //   postID: post._id as string,
-        //   caption: data.caption,
-        // });
-=======
         filterQueue.add("check-filter", {
           id: post._id as string,
           caption: data.caption,
           filterType: FilterType.post,
         });
->>>>>>> main
       console.timeEnd("DB Save");
       console.timeEnd("Total Logic Time");
 
@@ -115,6 +110,7 @@ export default class PostService {
         }),
       );
     }
+    await this.cascadeDeletePostRelations(postId);
     const deletedPost = await this.repo.deletePostById(postId);
     if (!deletedPost) throw new AppError("error while deleting post", 500);
   }
@@ -138,18 +134,11 @@ export default class PostService {
         type: data.updatedData.type,
       });
     }
-<<<<<<< ashraf
-    // filterQueue.add("check-filter", {
-    //   postID: data.postID.toString(),
-    //   caption: data.updatedData.caption,
-    // });
-=======
     filterQueue.add("check-filter", {
       id: data.postID.toString(),
       caption: data.updatedData.caption,
       filterType: FilterType.post,
     });
->>>>>>> main
     const updates: any = {
       caption: data.updatedData.caption,
       type: data.updatedData.type,
@@ -176,41 +165,65 @@ export default class PostService {
         }),
       );
     }
+    await this.cascadeDeletePostRelations(postId);
     const deletedPost = await this.repo.deletePostById(postId);
     if (!deletedPost) throw new AppError("error while deleting post", 500);
     return deletedPost;
   }
 
-<<<<<<< ashraf
-  async getUsersPosts(userId: string, page: number, limit: number): Promise<IPost[]> {
-    return await this.repo.findPostsByUserId(userId, page, limit) as IPost[];
+  private async cascadeDeletePostRelations(postId: string) {
+    await ReactsRepository.getInstance().deleteReactionsByModelId(postId);
+    const comments = await CommentsRepository.getInstance().getAllCommentsByPostId(postId);
+    await Promise.all(
+      comments.map((comment) =>
+        ReactsRepository.getInstance().deleteReactionsByModelId(comment._id as string),
+      ),
+    );
+    await CommentsRepository.getInstance().deleteCommentsByPostId(postId);
+  }
+
+  async getUsersPosts(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<IPost[]> {
+    return (await this.repo.findPostsByUserId(userId, page, limit)) as IPost[];
   }
 
   async getPostsByIds(postIds: string[]): Promise<IPost[]> {
     return await this.repo.findPostsByIds(postIds);
   }
 
-
-=======
   async createComment(postID: createCommentDTO): Promise<IComment> {
     return await CommentsService.getInstance().createComment(postID);
   }
-  async getPostComments(postId: string, query: any): Promise<PaginationResult<IComment>> {
+  async getPostComments(
+    postId: string,
+    query: any,
+  ): Promise<PaginationResult<IComment>> {
     return await CommentsService.getInstance().getPostComments(postId, query);
   }
   async incrementCommentsCount(postId: string): Promise<IPost | null> {
     return await this.repo.incrementCommentsCount(postId);
   }
-  async decrementCommentsCount(postId: string, count: number): Promise<IPost | null> {
+  async decrementCommentsCount(
+    postId: string,
+    count: number,
+  ): Promise<IPost | null> {
     return await this.repo.decrementCommentsCount(postId, count);
   }
-  async incrementReactionsCount(postId: string, reaction: string): Promise<IPost | null> {
+  async incrementReactionsCount(
+    postId: string,
+    reaction: string,
+  ): Promise<IPost | null> {
     return await this.repo.incrementReactionsCount(postId, reaction);
   }
-  async decrementReactionsCount(postId: string, reaction: string): Promise<IPost | null> {
+  async decrementReactionsCount(
+    postId: string,
+    reaction: string,
+  ): Promise<IPost | null> {
     return await this.repo.decrementReactionsCount(postId, reaction);
   }
->>>>>>> main
   async getGroupPosts(
     groupId: string,
     query: string,
