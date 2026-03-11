@@ -231,20 +231,20 @@ export default class UsersService {
     return suggestions;
   }
 
-  async getMyJoinedGroups(userID: string) {
-    return await this.groupService.getUserJoinedGroups(userID);
+  async getMyJoinedGroups(userID: string, query: any) {
+    return await this.groupService.getUserJoinedGroups(userID, query);
   }
 
-  async getMyGroups(userID: string) {
-    return await this.groupService.getMyGroups(userID);
+  async getMyGroups(userID: string, query: any) {
+    return await this.groupService.getMyGroups(userID, query);
   }
   static getInstance() {
     if (!UsersService.instance) {
       UsersService.instance = new UsersService(
         UsersRepository.getInstance(),
         FollowService.getInstance(),
-        PostService.getInstace(),
         GroupService.getInstance(),
+        PostService.getInstace(),
       );
     }
     return UsersService.instance;

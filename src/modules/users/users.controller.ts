@@ -185,12 +185,12 @@ export const suggestUsers = catchError(async (req: Request, res: Response) => {
 //18- get feed --> recommender system
 export const getMyJoinedGroups = catchError(
   async (req: Request, res: Response) => {
-    const groups = await service.getMyJoinedGroups(req.user?.id as string);
+    const groups = await service.getMyJoinedGroups(req.user?.id as string, req.query);
     res.status(200).json({ status: "success", data: { groups } });
   },
 );
 
 export const getMyGroups = catchError(async (req: Request, res: Response) => {
-  const groups = await service.getMyGroups(req.user?.id as string);
+  const groups = await service.getMyGroups(req.user?.id as string, req.query);
   res.status(200).json({ status: "success", data: { groups } });
 });

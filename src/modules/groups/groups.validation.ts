@@ -17,7 +17,7 @@ export const paramsIdVal = Joi.object({
 
 export const updateGroupVal = Joi.object({
   name: Joi.string(),
-  description: Joi.string(),
+  description: Joi.string().allow(null, ""),
   privacy: Joi.string().valid(...Object.values(GroupPrivacy)),
   logo: Joi.string(),
   tags: Joi.array().items(Joi.string()),

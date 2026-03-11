@@ -69,8 +69,8 @@ export default class GroupService {
     if (!group) throw new AppError("group not found", 404);
     return group;
   }
-  async getGroups(searchQuery: any): Promise<PaginationResult<IGroup>> {
-    const result = await this.repo.getGroups(searchQuery);
+  async getGroups(searchQuery: any, userId: string): Promise<PaginationResult<IGroup>> {
+    const result = await this.repo.getGroups(searchQuery, userId);
     if (result.data.length === 0) throw new AppError("no groups found", 404);
     return result;
   }
@@ -593,20 +593,16 @@ export default class GroupService {
     return shuffledPosts;
   }
 
-  async getUserJoinedGroups(userID: string) {
-    const memberships = await this.repo.getUsersJoinedGroups(userID);
-    if (memberships.length == 0)
+  async getUserJoinedGroups(userID: string, query: any) {
+    const groups = await this.repo.getUsersJoinedGroups(userID, query);
+    if (groups.length == 0)
       throw new AppError("No groups found for this user", 404);
 
-    const groups = memberships.map((membership) => {
-      return membership.groupId;
-    });
-    console.log(groups);
     return groups;
   }
 
-  async getMyGroups(userID: string) {
-    const groups = await this.repo.getMyGroups(userID);
+  async getMyGroups(userID: string, query: any) {
+    const groups = await this.repo.getMyGroups(userID, query);
     if (groups.length == 0)
       throw new AppError("No groups created by this user", 404);
 

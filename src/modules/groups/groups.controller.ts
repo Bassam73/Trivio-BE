@@ -68,7 +68,8 @@ export const updateGroup = catchError(async (req: Request, res: Response) => {
 
 export const getGroups = catchError(async (req: Request, res: Response) => {
   console.log(req.query);
-  const { data, page } = await service.getGroups(req.query);
+  const userId = req.user?._id as string;
+  const { data, page } = await service.getGroups(req.query, userId);
   res.status(200).json({
     status: "success",
     data: {

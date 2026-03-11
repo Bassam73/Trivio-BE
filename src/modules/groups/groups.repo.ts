@@ -31,8 +31,9 @@ export default class GroupRepository {
       new: true,
     });
   }
-  async getGroups(searchQuery: any): Promise<PaginationResult<IGroup>> {
-    const apiFeatures = new ApiFeatures<IGroup>(groupModel.find(), searchQuery)
+  async getGroups(searchQuery: any, userId: string): Promise<PaginationResult<IGroup>> {
+    const filter = userId ? { creatorId: { $ne: userId } } : {};
+    const apiFeatures = new ApiFeatures<IGroup>(groupModel.find(filter), searchQuery)
       .fields()
       .filter()
       .search("name") // Fixed: Search by name
@@ -114,11 +115,11 @@ export default class GroupRepository {
     groupId: string,
     userId: string,
   ): Promise<IJoinRequest | null> {
-    return await joinRequestModel.findOne({ groupId, userId });
+    return await joinRequestModel.findOne({ groupId, userId }).populate("userId");
   }
 
   async getJoinRequestById(requestId: string): Promise<IJoinRequest | null> {
-    return await joinRequestModel.findById(requestId);
+    return await joinRequestModel.findById(requestId).populate("userId");
   }
 
   async deleteJoinRequest(requestId: string): Promise<IJoinRequest | null> {
@@ -196,7 +197,7 @@ export default class GroupRepository {
     if (status) filter.status = status;
 
     const apiFeatures = new ApiFeatures<IGroupMember>(
-      groupMemberModel.find(filter).populate("userId", "name email"),
+      groupMemberModel.find(filter).populate("userId"),
       searchQuery,
     ).pagination(10); // Default limit
 
@@ -214,7 +215,7 @@ export default class GroupRepository {
     const apiFeatures = new ApiFeatures<IJoinRequest>(
       joinRequestModel
         .find({ groupId, status: "pending" })
-        .populate("userId", "name email"),
+        .populate("userId"),
       searchQuery,
     ).pagination(10);
 
@@ -225,11 +226,12 @@ export default class GroupRepository {
     return result;
   }
   async getJoinsForUser(userID: string) {
-    return await groupMemberModel.find({ userId: userID });
+    return await groupMemberModel.find({ userId: userID }).populate("groupId");
   }
 
-  async getMyGroups(userID: string) {
-    return await groupModel.find({ creatorId: userID });
+  async getMyGroups(userID: string, query: any) {
+    const apiFeatures = new ApiFeatures(groupModel.find({ creatorId: userID }), query).search("name");
+    return await apiFeatures.getQuery();
   }
   static getInstance() {
     if (!GroupRepository.instance) {
@@ -237,7 +239,11 @@ export default class GroupRepository {
     }
     return GroupRepository.instance;
   }
-  async getUsersJoinedGroups(userID: string) {
-    return groupMemberModel.find({ userId: userID }).populate("groupId");
+  async getUsersJoinedGroups(userID: string, query: any) {
+    const memberships = await groupMemberModel.find({ userId: userID }).select("groupId");
+    const groupIds = memberships.map((m) => m.groupId);
+    
+    const apiFeatures = new ApiFeatures(groupModel.find({ _id: { $in: groupIds } }), query).search("name");
+    return await apiFeatures.getQuery();
   }
 }

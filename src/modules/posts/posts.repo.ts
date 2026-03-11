@@ -62,7 +62,7 @@ export default class PostRepository {
     const apiFeatures = new ApiFeatures<IPost>(
       postModel
         .find({ location: "group", groupID: groupId })
-        .populate("groupID"),
+        .populate("groupID").populate("authorID"),
       searchQuery,
     )
       .filter()
