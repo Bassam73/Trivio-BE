@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 export default async function dbConnection() {
   const dbUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/trivio";
-  console.log(dbUri);
   try {
     await mongoose.connect(dbUri).then(() => {
       console.log("Database Connected Successfully");

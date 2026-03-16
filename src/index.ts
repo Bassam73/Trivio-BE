@@ -3,17 +3,17 @@ import env from "dotenv";
 import dbConnection from "./config/dbConnection";
 import AppError from "./core/utils/AppError";
 import bootstrap from "./modules/index.router";
-// import startAllCrons from "./config/cron";      <-- 1. DISABLE CRONS
+import startAllCrons from "./config/cron";
 import cors from "cors";
-// import redisConnection from "./config/redis";   <-- 2. DISABLE REDIS IMPORT
-// import { setupAllWorkers } from "./jobs";       <-- 3. DISABLE WORKERS
+import redisConnection from "./config/redis";
+import { setupAllWorkers } from "./jobs";
 import path from 'path'
 env.config();
 
 const app = express();
 dbConnection();
 
-// redisConnection();  <-- 4. DISABLE REDIS CONNECTION
+redisConnection();
 
 app.use(express.json());
 app.use(
@@ -25,8 +25,8 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 bootstrap(app);
 
-// startAllCrons();    <-- 5. DISABLE CRON START
-// setupAllWorkers();  <-- 6. DISABLE WORKER START
+startAllCrons();   
+setupAllWorkers();
 
 app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
   err.statusCode = err.statusCode || 500;

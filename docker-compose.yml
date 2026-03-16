@@ -10,16 +10,16 @@ services:
     networks:
       - trivio-net
 
-  trivio-mongo:
-    image: mongo:6.0
-    container_name: trivio_mongo
-    restart: always
-    ports:
-      - "27018:27017"
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - trivio-net
+  # trivio-mongo:
+  #   image: mongo:6.0
+  #   container_name: trivio_mongo
+  #   restart: always
+  #   ports:
+  #     - "27018:27017"
+  #   volumes:
+  #     - mongo_data:/data/db
+  #   networks:
+  #     - trivio-net
 
   trivio-api:
     build: .
@@ -31,7 +31,7 @@ services:
       - REDIS_HOST=trivio-redis
       - REDIS_PORT=6379
 
-      - MONGO_URI=mongodb://trivio-mongo:27017/trivio
+      - MONGO_URI=${MONGO_URI}
 
       - PORT=3500
     env_file:
@@ -43,7 +43,7 @@ services:
     command: npm run docker
     depends_on:
       - trivio-redis
-      - trivio-mongo
+      # - trivio-mongo
     networks:
       - trivio-net
 
