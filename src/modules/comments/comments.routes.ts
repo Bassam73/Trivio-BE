@@ -1,40 +1,40 @@
-import express from "express";
-import valid from "express-joi-validation";
-import authorizePostAccess from "../../core/middlewares/authorizePostAccess";
-import {
-  deleteComment,
-  getComment,
-  updateComment,
-  createReply,
-  getReplies,
-  createCommentReaction,
-  getCommentReactions,
-} from "./comments.controller";
-import { createReplySchema, updateCommentSchema } from "./comments.validation";
-import { createReactionSchema } from "../reacts/reacts.validation";
-import protectedRoutes from "../../core/middlewares/protectedRoutes";
-const validator = valid.createValidator();
-const commentsRouter = express.Router();
-commentsRouter.route("/:cid").put(
-  protectedRoutes,
-  validator.body(updateCommentSchema),
-  authorizePostAccess,
-  updateComment,
-).get(protectedRoutes, authorizePostAccess, getComment).
-delete(protectedRoutes, authorizePostAccess, deleteComment);
+// import express from "express";
+// import valid from "express-joi-validation";
+// import authorizePostAccess from "../../core/middlewares/authorizePostAccess";
+// import {
+//   deleteComment,
+//   getComment,
+//   updateComment,
+//   createReply,
+//   getReplies,
+//   createCommentReaction,
+//   getCommentReactions,
+// } from "./comments.controller";
+// import { createReplySchema, updateCommentSchema } from "./comments.validation";
+// import { createReactionSchema } from "../reacts/reacts.validation";
+// import protectedRoutes from "../../core/middlewares/protectedRoutes";
+// const validator = valid.createValidator();
+// const commentsRouter = express.Router();
+// commentsRouter.route("/:cid").put(
+//   protectedRoutes,
+//   validator.body(updateCommentSchema),
+//   authorizePostAccess,
+//   updateComment,
+// ).get(protectedRoutes, authorizePostAccess, getComment).
+// delete(protectedRoutes, authorizePostAccess, deleteComment);
 
-commentsRouter.route("/:cid/replies").post(
-  protectedRoutes,
-  validator.body(createReplySchema),
-  authorizePostAccess,
-  createReply,
-).get(protectedRoutes, authorizePostAccess, getReplies);
+// commentsRouter.route("/:cid/replies").post(
+//   protectedRoutes,
+//   validator.body(createReplySchema),
+//   authorizePostAccess,
+//   createReply,
+// ).get(protectedRoutes, authorizePostAccess, getReplies);
 
-commentsRouter.route("/:cid/reacts").post(
-  protectedRoutes,
-  authorizePostAccess,
-  validator.body(createReactionSchema),
-  createCommentReaction
-).get(protectedRoutes, authorizePostAccess, getCommentReactions);
+// commentsRouter.route("/:cid/reacts").post(
+//   protectedRoutes,
+//   authorizePostAccess,
+//   validator.body(createReactionSchema),
+//   createCommentReaction
+// ).get(protectedRoutes, authorizePostAccess, getCommentReactions);
 
-export default commentsRouter;
+// export default commentsRouter;

@@ -32,6 +32,8 @@ import {
   suggestUsers,
   getMyJoinedGroups,
   getMyGroups,
+  getChatbotHistory,
+  sendMessageChatbot,
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -104,4 +106,7 @@ usersRouter.get(
 
 usersRouter.get("/me/joined-groups", protectedRoutes, getMyJoinedGroups);
 usersRouter.get("/me/my-groups", protectedRoutes, getMyGroups);
+
+usersRouter.get("/chatbot/get-history", protectedRoutes, getChatbotHistory);
+usersRouter.post("/chatbot/send-message", protectedRoutes, sendMessageChatbot);
 export default usersRouter;

@@ -60,24 +60,24 @@ const updatePostById = catchError(
   },
 );
 
-const createComment = catchError(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const data: createCommentDTO = {
-      postId: req.params.id,
-      userId: req.user?.id,
-      text: req.body.text,
-    };
-    const comment = await service.createComment(data);
-    res.status(201).json({ status: "success", data: { comment } });
-  },
-);
+// const createComment = catchError(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const data: createCommentDTO = {
+//       postId: req.params.id,
+//       userId: req.user?.id,
+//       text: req.body.text,
+//     };
+//     const comment = await service.createComment(data);
+//     res.status(201).json({ status: "success", data: { comment } });
+//   },
+// );
 
-const getPostComments = catchError(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const comments = await service.getPostComments(req.params.id, req.query);
-    res.status(200).json({ status: "success", data: comments });
-  },
-);
+// const getPostComments = catchError(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const comments = await service.getPostComments(req.params.id, req.query);
+//     res.status(200).json({ status: "success", data: comments });
+//   },
+// );
 
 import ReactsService from "../reacts/reacts.service";
 const reactsService = ReactsService.getInstance();
@@ -110,8 +110,8 @@ export {
   getPublicPostsById,
   deletePostById,
   updatePostById,
-  createComment,
-  getPostComments,
+  // createComment,
+  // getPostComments,
   createPostReaction,
   getPostReactions,
 };

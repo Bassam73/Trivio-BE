@@ -5,15 +5,15 @@ import AppError from "./core/utils/AppError";
 import bootstrap from "./modules/index.router";
 import startAllCrons from "./config/cron";
 import cors from "cors";
-import redisConnection from "./config/redis";
-import { setupAllWorkers } from "./jobs";
+// import redisConnection from "./config/redis";
+// import { setupAllWorkers } from "./jobs";
 import path from 'path'
 env.config();
 
 const app = express();
 dbConnection();
 
-redisConnection();
+// redisConnection();
 
 app.use(express.json());
 app.use(
@@ -25,8 +25,8 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 bootstrap(app);
 
-startAllCrons();   
-setupAllWorkers();
+// startAllCrons();   
+// setupAllWorkers();
 
 app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
   err.statusCode = err.statusCode || 500;

@@ -12,11 +12,11 @@ import PostRepository from "./posts.repo";
 import axios from "axios";
 import fs from "fs";
 import getMentionedUsers from "../../core/utils/mentionedUsers";
-import filterQueue from "../../jobs/queues/filterQueue";
+// import filterQueue from "../../jobs/queues/filterQueue";
 import ApiFeatures from "../../core/utils/ApiFeatures";
 import { FilterType, PaginationResult } from "../../types/global";
 import { createCommentDTO, IComment } from "../../types/comment.types";
-import CommentsService from "../comments/comments.service";
+// import CommentsService from "../comments/comments.service";
 import CommentsRepository from "../comments/comments.repo";
 import ReactsRepository from "../reacts/reacts.repo";
 
@@ -55,11 +55,11 @@ export default class PostService {
       console.time("DB Save");
       const post = await this.repo.createPost(data);
       if (data.caption)
-        filterQueue.add("check-filter", {
-          id: post._id as string,
-          caption: data.caption,
-          filterType: FilterType.post,
-        });
+        // filterQueue.add("check-filter", {
+        //   id: post._id as string,
+        //   caption: data.caption,
+        //   filterType: FilterType.post,
+        // });
       console.timeEnd("DB Save");
       console.timeEnd("Total Logic Time");
 
@@ -134,11 +134,11 @@ export default class PostService {
         type: data.updatedData.type,
       });
     }
-    filterQueue.add("check-filter", {
-      id: data.postID.toString(),
-      caption: data.updatedData.caption,
-      filterType: FilterType.post,
-    });
+    // filterQueue.add("check-filter", {
+    //   id: data.postID.toString(),
+    //   caption: data.updatedData.caption,
+    //   filterType: FilterType.post,
+    // });
     const updates: any = {
       caption: data.updatedData.caption,
       type: data.updatedData.type,
@@ -194,15 +194,15 @@ export default class PostService {
     return await this.repo.findPostsByIds(postIds);
   }
 
-  async createComment(postID: createCommentDTO): Promise<IComment> {
-    return await CommentsService.getInstance().createComment(postID);
-  }
-  async getPostComments(
-    postId: string,
-    query: any,
-  ): Promise<PaginationResult<IComment>> {
-    return await CommentsService.getInstance().getPostComments(postId, query);
-  }
+  // async createComment(postID: createCommentDTO): Promise<IComment> {
+  //   return await CommentsService.getInstance().createComment(postID);
+  // }
+  // async getPostComments(
+  //   postId: string,
+  //   query: any,
+  // ): Promise<PaginationResult<IComment>> {
+  //   return await CommentsService.getInstance().getPostComments(postId, query);
+  // }
   async incrementCommentsCount(postId: string): Promise<IPost | null> {
     return await this.repo.incrementCommentsCount(postId);
   }
