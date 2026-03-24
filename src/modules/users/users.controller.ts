@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import catchError from "../../core/middlewares/catchError";
 import UsersService from "./users.service";
-import PostService from "../posts/posts.service";
+// import PostService from "../posts/posts.service";
 import { updateProfileDTO } from "../../types/user.types";
 
 const service = UsersService.getInstance();
@@ -167,7 +167,18 @@ export const suggestUsers = catchError(async (req: Request, res: Response) => {
   res.status(200).json({ status: "success", data: { suggestions } });
 });
 
+export const sendMessageChatbot = catchError(async (req: Request, res: Response) => {
+  const id = req.user?._id as string;
+  const { message } = req.body;
+  const response = await service.sendMessageChatbot(id, message);
+  res.status(200).json({ status: "success", data: { response } });
+});
 
+export const getChatbotHistory = catchError(async (req: Request, res: Response) => {
+  const id = req.user?._id as string;
+  const messages = await service.getChatbotHistory(id);
+  res.status(200).json({ status: "success", data: { messages } });
+});
 //2- update email in another route to handle the email verification process
 
 

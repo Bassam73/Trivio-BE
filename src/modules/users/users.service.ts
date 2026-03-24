@@ -7,6 +7,8 @@ import GroupService from "../groups/groups.service";
 import UsersRepository from "./users.repo";
 
 import bcrypt from "bcrypt";
+import { createMessageDTO } from "../../types/chatbotMessage.types"; 
+import messageModel from "../../database/models/chatBotMessage.model"; 
 
 export default class UsersService {
   private static instance: UsersService;
@@ -230,6 +232,38 @@ export default class UsersService {
 
     return suggestions;
   }
+  // import { Request, Response } from "express";
+// The URL of your deployed Python FastAPI (Captain Magdy)
+// Make sure to put this in your .env file in production!
+// const MAGDY_API_URL = process.env.MAGDY_API_URL || "http://127.0.0.1:8000/chat";
+
+
+// export const getChatHistory = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     const { threadId } = req.params;
+
+//     if (!threadId) {
+//       res.status(400).json({ error: "threadId parameter is required." });
+//       return;
+//     }
+
+//     // Fetch messages for this thread, sorted by creation time (oldest first)
+//     // We select only the fields the frontend needs to render the chat bubbles
+//     const messages = await messageModel
+//       .find({ threadId })
+//       .sort({ createdAt: 1 })
+//       .select("senderType text createdAt -_id"); 
+
+//     res.status(200).json({
+//       success: true,
+//       data: messages,
+//     });
+
+//   } catch (error) {
+//     console.error("Error in getChatHistory:", error);
+//     res.status(500).json({ error: "Failed to retrieve chat history." });
+//   }
+// };
 
   async getMyJoinedGroups(userID: string, query: any) {
     return await this.groupService.getUserJoinedGroups(userID, query);
@@ -238,6 +272,60 @@ export default class UsersService {
   async getMyGroups(userID: string, query: any) {
     return await this.groupService.getMyGroups(userID, query);
   }
+
+  async getChatbotHistory(userID: string) {
+    if (!userID) {
+      throw new AppError("userID parameter is required.", 400);
+    }
+
+    const messages = await messageModel
+      .find({ threadId: userID })
+      .sort({ createdAt: 1 })
+      .select("senderType text createdAt -_id");
+
+    return messages;
+  }
+
+  async sendMessageChatbot(userID: string, message: string) {
+    const chatbotUrl = process.env.CHATBOT_API_URL|| "http://127.0.0.1:8000/chat";
+    
+    if (!userID || !message) {
+      throw new AppError("userID and message are required.", 400);
+    }
+
+    const humanMessageData: createMessageDTO = {
+      threadId: userID,
+      senderType: "human",
+      text: message,
+    };
+    await messageModel.create(humanMessageData);
+
+    const aiResponse = await fetch(chatbotUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: userID, message: message }),
+    });
+
+    if (!aiResponse.ok) {
+      throw new AppError(`Python API responded with status ${aiResponse.status}`, 502);
+    }
+
+    const aiData = await aiResponse.json();
+    const agentText = aiData.message;
+
+    const aiMessageData: createMessageDTO = {
+      threadId: userID,
+      senderType: "ai",
+      text: agentText,
+    };
+    await messageModel.create(aiMessageData);
+
+    return {
+      senderType: "ai",
+      text: agentText,
+    };
+  }
+ 
   static getInstance() {
     if (!UsersService.instance) {
       UsersService.instance = new UsersService(
@@ -250,5 +338,3 @@ export default class UsersService {
     return UsersService.instance;
   }
 }
-
-
