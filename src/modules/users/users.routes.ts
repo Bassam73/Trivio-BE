@@ -34,6 +34,7 @@ import {
   getMyGroups,
   getChatbotHistory,
   sendMessageChatbot,
+  getUserInfo,
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -82,7 +83,7 @@ usersRouter.patch(
   validator.body(updateProfileVal),
   updateProfile,
 );
-
+usersRouter.get("/:id", getUserInfo);
 usersRouter.get(
   "/:id/followers",
   protectedRoutes,

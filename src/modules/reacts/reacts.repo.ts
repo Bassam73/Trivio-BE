@@ -1,7 +1,11 @@
 import ApiFeatures from "../../core/utils/ApiFeatures";
 import reactionModel from "../../database/models/reaction.model";
 import { PaginationResult } from "../../types/global";
-import { createReactionDTO, IReaction, updateReactionDTO } from "../../types/reaction.types";
+import {
+  createReactionDTO,
+  IReaction,
+  updateReactionDTO,
+} from "../../types/reaction.types";
 
 export default class ReactsRepository {
   private static instance: ReactsRepository;
@@ -15,7 +19,10 @@ export default class ReactsRepository {
     return await reactionModel.findById(id);
   }
 
-  async getReactionByUserAndModel(userId: string, modelId: string): Promise<IReaction | null> {
+  async getReactionByUserAndModel(
+    userId: string,
+    modelId: string,
+  ): Promise<IReaction | null> {
     return await reactionModel.findOne({ userId, modelId });
   }
 
@@ -32,10 +39,15 @@ export default class ReactsRepository {
     return await reactionModel.findByIdAndUpdate(id, data, { new: true });
   }
 
-  async getReactionsByModelId(modelId: string, searchQuery: any): Promise<PaginationResult<IReaction>> {
+  async getReactionsByModelId(
+    modelId: string,
+    searchQuery: any,
+  ): Promise<PaginationResult<IReaction>> {
     const apiFeatures = new ApiFeatures<IReaction>(
-      reactionModel.find({ modelId: modelId }).populate("userId", "username profilePicture"),
-      searchQuery
+      reactionModel
+        .find({ modelId: modelId })
+        .populate("userId", "username profilePicture"),
+      searchQuery,
     )
       .filter()
       .search()
@@ -48,6 +60,15 @@ export default class ReactsRepository {
       page: apiFeatures.getPageNumber(),
     };
     return result;
+  }
+  async getReactionsByPostsIDs(userID: string, postsID: string[]) {
+    return await reactionModel
+      .find({
+        onModel: "post",
+        modelId: { $in: postsID },
+        userId: userID,
+      })
+      .select("modelId reaction -_id");
   }
 
   static getInstance() {

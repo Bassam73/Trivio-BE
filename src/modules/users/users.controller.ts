@@ -70,6 +70,11 @@ export const getMe = catchError(async (req: Request, res: Response) => {
   res.status(200).json({ status: "success", data: { user } });
 });
 
+export const getUserInfo=catchError(async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  const user = await service.getMe(id);
+  res.status(200).json({ status: "success", data: { user } });
+});
 
 export const getLikePostsID = catchError(async (req: Request, res: Response) => {
   const id = req.user?._id as string;

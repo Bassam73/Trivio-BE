@@ -199,7 +199,7 @@ export default class GroupRepository {
     const apiFeatures = new ApiFeatures<IGroupMember>(
       groupMemberModel.find(filter).populate("userId"),
       searchQuery,
-    ).pagination(10); // Default limit
+    ).pagination(10); 
 
     const result: PaginationResult<IGroupMember> = {
       data: await apiFeatures.getQuery(),

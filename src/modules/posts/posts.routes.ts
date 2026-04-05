@@ -27,7 +27,7 @@ const postsRouter = express.Router();
 
 postsRouter
   .route("")
-  .get(getPublicPosts)
+  .get(protectedRoutes, getPublicPosts)
   .post(
     protectedRoutes,
     validator.body(createPostVal),
@@ -46,11 +46,11 @@ postsRouter
     protectedRoutes,
     authorizePostAccess,
     validator.params(paramsIdVal),
-    getPostComments
+    getPostComments,
   );
 postsRouter
   .route("/:id")
-  .get(validator.params(paramsIdVal), getPublicPostsById)
+  .get(protectedRoutes, validator.params(paramsIdVal), getPublicPostsById)
   .patch(
     protectedRoutes,
     validator.params(paramsIdVal),
@@ -66,14 +66,13 @@ postsRouter
     authorizePostAccess,
     validator.params(paramsIdVal),
     validator.body(createReactionSchema),
-    createPostReaction
+    createPostReaction,
   )
   .get(
     protectedRoutes,
     authorizePostAccess,
     validator.params(paramsIdVal),
-    getPostReactions
+    getPostReactions,
   );
-
 
 export default postsRouter;

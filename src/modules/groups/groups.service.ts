@@ -70,6 +70,7 @@ export default class GroupService {
     return group;
   }
   async getGroups(searchQuery: any, userId: string): Promise<PaginationResult<IGroup>> {
+    console.log("userId in service" ,userId)  
     const result = await this.repo.getGroups(searchQuery, userId);
     if (result.data.length === 0) throw new AppError("no groups found", 404);
     return result;

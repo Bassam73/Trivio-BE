@@ -19,12 +19,13 @@ import { createCommentDTO, IComment } from "../../types/comment.types";
 import CommentsService from "../comments/comments.service";
 import CommentsRepository from "../comments/comments.repo";
 import ReactsRepository from "../reacts/reacts.repo";
+import FollowService from "../follow/follow.service";
+import ReactsService from "../reacts/reacts.service";
 
 export default class PostService {
   private static instance: PostService;
   private repo: PostRepository;
   private userRepo: AuthRepository;
-
   constructor(repo: PostRepository, userRepo: AuthRepository) {
     this.repo = repo;
     this.userRepo = userRepo;
@@ -79,16 +80,62 @@ export default class PostService {
     }
   }
 
-  async getPublicPosts(): Promise<IPost[]> {
+  async getPublicPosts(userID: string): Promise<object[]> {
     const posts = await this.repo.getPublicPosts();
-    return posts;
+    const authorsID: string[] = posts.map((post) => {
+      return post.authorID._id as unknown as string;
+    });
+    const postsID: string[] | null = posts.map((post) => {
+      return post._id?.toString() as string;
+    });
+    const reactsObj = await ReactsService.getInstance().getReactionsByPostsIDs(
+      userID,
+      postsID,
+    );
+    const reactsMap: Map<string, string> = new Map<string, string>();
+    reactsObj.map((react) => {
+      reactsMap.set(react.modelId.toString(), react.reaction);
+    });
+    let follows = await FollowService.getInstance().checkFollowStatusForPosts(
+      userID,
+      authorsID,
+    );
+    let followsSet: Set<string> = new Set<string>();
+    follows.map((follow) => followsSet.add(follow.userId.toString()));
+    let response: object[] = posts.map((post) => {
+      return {
+        post: post,
+        isFollowed: followsSet.has(post.authorID._id.toString()),
+        userReact: reactsMap.has(post._id?.toString() as string)
+          ? reactsMap.get(post._id?.toString() as string)
+          : null,
+      };
+    });
+    return response;
   }
 
-  async getPublicPostsById(id: string): Promise<IPost> {
+  async getPublicPostsById(id: string, userID: string) {
     const post = await this.repo.getPostById(id);
     if (!post) throw new AppError("post not found", 404);
     if (post.type !== "public") throw new AppError("post is not public", 403);
-    return post;
+
+    const postIdStr = String(post._id);
+    const authorIdStr = String(post.authorID._id);
+
+    const [reactsObj, follows] = await Promise.all([
+      ReactsService.getInstance().getReactionsByPostsIDs(userID, [postIdStr]),
+      FollowService.getInstance().checkFollowStatusForPosts(userID, [
+        authorIdStr,
+      ]),
+    ]);
+    const userReact = reactsObj.length > 0 ? reactsObj[0].reaction : null;
+    const isFollowed = follows.length > 0;
+
+    return {
+      post: post,
+      isFollowed: isFollowed,
+      userReact: userReact,
+    };
   }
   async getPostbyId(id: string): Promise<IPost | null> {
     return await this.repo.getPostByID(id);
@@ -173,10 +220,13 @@ export default class PostService {
 
   private async cascadeDeletePostRelations(postId: string) {
     await ReactsRepository.getInstance().deleteReactionsByModelId(postId);
-    const comments = await CommentsRepository.getInstance().getAllCommentsByPostId(postId);
+    const comments =
+      await CommentsRepository.getInstance().getAllCommentsByPostId(postId);
     await Promise.all(
       comments.map((comment) =>
-        ReactsRepository.getInstance().deleteReactionsByModelId(comment._id as string),
+        ReactsRepository.getInstance().deleteReactionsByModelId(
+          comment._id as string,
+        ),
       ),
     );
     await CommentsRepository.getInstance().deleteCommentsByPostId(postId);

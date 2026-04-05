@@ -2,7 +2,11 @@ import AppError from "../../core/utils/AppError";
 import ReactsRepository from "./reacts.repo";
 import PostService from "../posts/posts.service";
 import CommentsRepository from "../comments/comments.repo";
-import { createReactionDTO, updateReactionDTO, IReaction } from "../../types/reaction.types";
+import {
+  createReactionDTO,
+  updateReactionDTO,
+  IReaction,
+} from "../../types/reaction.types";
 import { PaginationResult } from "../../types/global";
 
 export default class ReactsService {
@@ -11,22 +15,35 @@ export default class ReactsService {
   private postService: PostService;
   private commentsRepo: CommentsRepository;
 
-  constructor(repo: ReactsRepository, postService: PostService, commentsRepo: CommentsRepository) {
+  constructor(
+    repo: ReactsRepository,
+    postService: PostService,
+    commentsRepo: CommentsRepository,
+  ) {
     this.repo = repo;
     this.postService = postService;
     this.commentsRepo = commentsRepo;
   }
 
   async createReaction(data: createReactionDTO): Promise<IReaction> {
-    const existingReaction = await this.repo.getReactionByUserAndModel(data.userId, data.modelId);
+    const existingReaction = await this.repo.getReactionByUserAndModel(
+      data.userId,
+      data.modelId,
+    );
     if (existingReaction) {
-      throw new AppError("You have already reacted to this. Use PATCH to update.", 400);
+      throw new AppError(
+        "You have already reacted to this. Use PATCH to update.",
+        400,
+      );
     }
 
     const reaction = await this.repo.createReaction(data);
 
     if (data.onModel === "post") {
-      await this.postService.incrementReactionsCount(data.modelId, data.reaction);
+      await this.postService.incrementReactionsCount(
+        data.modelId,
+        data.reaction,
+      );
     } else if (data.onModel === "comment") {
       await this.commentsRepo.incrementReactionsCount(data.modelId);
     }
@@ -49,14 +66,23 @@ export default class ReactsService {
     const oldReaction = reaction.reaction;
     const newReaction = data.reaction;
 
-    const updatedReaction = await this.repo.updateReactionById(data.reactionId, { reaction: newReaction });
+    const updatedReaction = await this.repo.updateReactionById(
+      data.reactionId,
+      { reaction: newReaction },
+    );
 
     if (!updatedReaction) throw new AppError("Error updating reaction", 500);
 
     if (reaction.onModel === "post") {
-      await this.postService.decrementReactionsCount(reaction.modelId.toString(), oldReaction);
-      await this.postService.incrementReactionsCount(reaction.modelId.toString(), newReaction);
-    } 
+      await this.postService.decrementReactionsCount(
+        reaction.modelId.toString(),
+        oldReaction,
+      );
+      await this.postService.incrementReactionsCount(
+        reaction.modelId.toString(),
+        newReaction,
+      );
+    }
     return updatedReaction;
   }
 
@@ -73,22 +99,32 @@ export default class ReactsService {
 
     // Update counts
     if (reaction.onModel === "post") {
-      await this.postService.decrementReactionsCount(reaction.modelId.toString(), reaction.reaction);
+      await this.postService.decrementReactionsCount(
+        reaction.modelId.toString(),
+        reaction.reaction,
+      );
     } else if (reaction.onModel === "comment") {
-      await this.commentsRepo.decrementReactionsCount(reaction.modelId.toString());
+      await this.commentsRepo.decrementReactionsCount(
+        reaction.modelId.toString(),
+      );
     }
   }
 
-  async getReactionsByModelId(modelId: string, query: any): Promise<PaginationResult<IReaction>> {
+  async getReactionsByModelId(
+    modelId: string,
+    query: any,
+  ): Promise<PaginationResult<IReaction>> {
     return await this.repo.getReactionsByModelId(modelId, query);
   }
-
+  async getReactionsByPostsIDs(userID: string, postsID: string[]) {
+    return await this.repo.getReactionsByPostsIDs(userID, postsID);
+  }
   static getInstance() {
     if (!ReactsService.instance) {
       ReactsService.instance = new ReactsService(
         ReactsRepository.getInstance(),
         PostService.getInstace(),
-        CommentsRepository.getInstance()
+        CommentsRepository.getInstance(),
       );
     }
     return ReactsService.instance;

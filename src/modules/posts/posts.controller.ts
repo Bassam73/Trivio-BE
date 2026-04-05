@@ -10,7 +10,8 @@ const service = PostService.getInstace();
 
 const getPublicPosts = catchError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const posts = await service.getPublicPosts();
+    const userID = req.user?._id as string;
+    const posts = await service.getPublicPosts(userID);
     res.status(200).json({ status: "success", data: { posts } });
   },
 );
@@ -36,8 +37,11 @@ const createPost = catchError(
 
 const getPublicPostsById = catchError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const post: IPost = await service.getPublicPostsById(req.params.id);
-    res.status(200).json({ status: "success", data: { post } });
+    const data = await service.getPublicPostsById(
+      req.params.id,
+      req.user?.id as unknown as string,
+    );
+    res.status(200).json({ status: "success", data });
   },
 );
 
@@ -94,14 +98,17 @@ const createPostReaction = catchError(
       reaction: req.body.reaction,
     });
     res.status(201).json({ status: "success", data: { reaction } });
-  }
+  },
 );
 
 const getPostReactions = catchError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const reactions = await reactsService.getReactionsByModelId(req.params.id, req.query);
+    const reactions = await reactsService.getReactionsByModelId(
+      req.params.id,
+      req.query,
+    );
     res.status(200).json({ status: "success", data: reactions });
-  }
+  },
 );
 
 export {

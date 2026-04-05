@@ -10,10 +10,10 @@ export default class PostRepository {
     return await postModel.create(data);
   }
   async getPublicPosts(): Promise<IPost[]> {
-    return await postModel.find({ type: "public" });
+    return await postModel.find({ type: "public" }).populate("authorID");
   }
   async getPostById(id: string): Promise<IPost | null> {
-    return await postModel.findById(id);
+    return await postModel.findById(id).populate("authorID");
   }
   async deletePostById(id: string): Promise<IPost | null> {
     return await postModel.findByIdAndDelete(id);
@@ -79,13 +79,13 @@ export default class PostRepository {
   }
 
   async getPostsByGroupId(groupId: string): Promise<IPost[]> {
-    return await postModel.find({ location: "group", groupID: groupId });
+    return await postModel.find({ location: "group", groupID: groupId }).populate("authorID");
   }
 
   async findPostsByIds(postIds: string[]) {
     return await postModel.find({
       _id: { $in: postIds },
-    });
+    }).populate("authorID");
   }
   async findPostsByUserId(
     userId: string,
@@ -111,7 +111,7 @@ export default class PostRepository {
       .exec();
   }
   async getPostByID(id: string): Promise<IPost | null> {
-    return await postModel.findById(id);
+    return await postModel.findById(id).populate("authorID");
   }
   static getInstace() {
     if (!PostRepository.instance) {

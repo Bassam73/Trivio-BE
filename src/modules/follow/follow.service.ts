@@ -18,6 +18,8 @@ export default class FollowService {
     follower: string,
     userStatus: UserPrivacy,
   ): Promise<IFollow> {
+    if (follower.toString() === userID.toString())
+      throw new AppError("You cannot follow yourself", 400);
     const checkFollow = await this.repo.getAFollow(userID, follower);
     if (checkFollow)
       throw new AppError(
@@ -64,7 +66,10 @@ export default class FollowService {
     return followRequests;
   }
 
-  async acceptFollowRequest(requestId: string, currentUserId: string): Promise<IFollow> {
+  async acceptFollowRequest(
+    requestId: string,
+    currentUserId: string,
+  ): Promise<IFollow> {
     const request = await this.repo.getFollowRequestById(requestId);
     if (!request) {
       throw new AppError("Follow request not found", 404);
@@ -76,7 +81,10 @@ export default class FollowService {
       throw new AppError("Request already accepted", 400);
     }
 
-    const updatedFollow = await this.repo.updateFollowStatus(requestId, FollowStauts.following);
+    const updatedFollow = await this.repo.updateFollowStatus(
+      requestId,
+      FollowStauts.following,
+    );
     if (!updatedFollow) {
       throw new AppError("Failed to update follow status", 500);
     }
@@ -90,7 +98,10 @@ export default class FollowService {
     return updatedFollow;
   }
 
-  async declineFollowRequest(requestId: string, currentUserId: string): Promise<void> {
+  async declineFollowRequest(
+    requestId: string,
+    currentUserId: string,
+  ): Promise<void> {
     const request = await this.repo.getFollowRequestById(requestId);
     if (!request) {
       throw new AppError("Follow request not found", 404);
@@ -102,15 +113,26 @@ export default class FollowService {
     await this.repo.deleteFollowRequest(requestId);
   }
 
-  async getFollowers(userId: string, page: number, limit: number): Promise<IFollow[]> {
+  async getFollowers(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<IFollow[]> {
     return await this.repo.getFollowers(userId, page, limit);
   }
 
-  async getFollowing(userId: string, page: number, limit: number): Promise<IFollow[]> {
+  async getFollowing(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<IFollow[]> {
     return await this.repo.getFollowing(userId, page, limit);
   }
 
-  async getRelationshipStatus(currentUserId: string, targetUserId: string): Promise<string> {
+  async getRelationshipStatus(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<string> {
     if (currentUserId.toString() === targetUserId.toString()) {
       return "self";
     }
@@ -121,6 +143,13 @@ export default class FollowService {
     }
 
     return follow.status;
+  }
+  async checkFollowStatusForPosts(currentUserId: string, authorsID: string[]) {
+    let follows = await this.repo.checkFollowStatusForPosts(
+      currentUserId,
+      authorsID,
+    );
+    return follows;
   }
   static getInstance() {
     if (!FollowService.instance) {

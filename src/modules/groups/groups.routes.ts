@@ -54,7 +54,7 @@ groupRouter
     uploadImage.single("logo"),
     createGroup,
   )
-  .get(getGroups);
+  .get(protectedRoutes,getGroups);
 groupRouter.route("/feed").get(protectedRoutes, getGroupFeed);
 groupRouter
   .route("/:id")

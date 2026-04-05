@@ -35,11 +35,14 @@ export default class FollowRepository {
     return await followModel.findById(requestId);
   }
 
-  async updateFollowStatus(followId: string, status: FollowStauts): Promise<IFollow | null> {
+  async updateFollowStatus(
+    followId: string,
+    status: FollowStauts,
+  ): Promise<IFollow | null> {
     return await followModel.findByIdAndUpdate(
       followId,
       { status },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -47,7 +50,11 @@ export default class FollowRepository {
     await followModel.findByIdAndDelete(requestId);
   }
 
-  async getFollowers(userId: string, page: number = 1, limit: number = 10): Promise<IFollow[]> {
+  async getFollowers(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<IFollow[]> {
     const skip = (page - 1) * limit;
     return await followModel
       .find({ userId: userId, status: FollowStauts.following })
@@ -56,13 +63,25 @@ export default class FollowRepository {
       .limit(limit);
   }
 
-  async getFollowing(userId: string, page: number = 1, limit: number = 10): Promise<IFollow[]> {
+  async getFollowing(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<IFollow[]> {
     const skip = (page - 1) * limit;
     return await followModel
       .find({ follwerId: userId, status: FollowStauts.following })
       .populate("userId")
       .skip(skip)
       .limit(limit);
+  }
+  async checkFollowStatusForPosts(currentUserId: string, authorsID: string[]) {
+    return await followModel
+      .find({
+        userId: { $in: authorsID },
+        follwerId: currentUserId,
+      })
+      .select("userId -_id");
   }
   static getInstance() {
     if (!FollowRepository.instance) {
