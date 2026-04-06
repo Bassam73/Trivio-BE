@@ -13,6 +13,10 @@ import AppError from "../../core/utils/AppError";
 import PostService from "../posts/posts.service";
 import GroupService from "../groups/groups.service";
 import ReactsRepository from "../reacts/reacts.repo";
+import NotificationService from "../notifications/notification.service";
+import { createNotificationDTO, EntityType } from "../../types/notification.types";
+import UsersService from "../users/users.service";
+import mongoose from "mongoose";
 
 export default class CommentsService {
   private static instance: CommentsService;
@@ -51,6 +55,22 @@ export default class CommentsService {
       caption: data.text,
       filterType: FilterType.comment,
     });
+
+  
+      const post = await this.postService.getPostbyId(data.postId);
+      if (post && post.authorID.toString() !== data.userId) {
+        const sender = await UsersService.getInstance().getMe(data.userId);
+        const notifData: createNotificationDTO = {
+          sender: sender._id as mongoose.Types.ObjectId,
+          receiver: post.authorID as unknown as mongoose.Types.ObjectId,
+          message: `${sender.username} commented on your post`,
+          entityID: comment._id as unknown as mongoose.Types.ObjectId,
+          entityType: EntityType.COMMENT,
+        };
+        await NotificationService.getInstance().createNotificaiton(notifData);
+      }
+   
+
     return comment;
   }
 
@@ -60,7 +80,7 @@ export default class CommentsService {
 
     if (parentComment.parent) {
       throw new AppError("Nested replies are not allowed", 400);
-    } // No nested replies
+    } 
 
     data.postId = parentComment.postId.toString();
 
@@ -73,6 +93,20 @@ export default class CommentsService {
       caption: data.text,
       filterType: FilterType.comment,
     });
+
+   
+      if (parentComment.userId.toString() !== data.userId) {
+        const sender = await UsersService.getInstance().getMe(data.userId);
+        const notifData: createNotificationDTO = {
+          sender: sender._id as mongoose.Types.ObjectId,
+          receiver: parentComment.userId as unknown as mongoose.Types.ObjectId,
+          message: `${sender.username} replied to your comment`,
+          entityID: reply._id as unknown as mongoose.Types.ObjectId,
+          entityType: EntityType.COMMENT,
+        };
+        await NotificationService.getInstance().createNotificaiton(notifData);
+      }
+    
 
     return reply;
   }
@@ -102,12 +136,11 @@ export default class CommentsService {
     const updatedComment = await this.repo.updateCommentById(data.cid, {
       text: data.text,
       isEdited: true,
-      flagged: false, // Reset flagged status on update
+      flagged: false, 
     });
 
     if (!updatedComment) throw new AppError("Error updating comment", 500);
 
-    // Re-check toxicity for updated content
     filterQueue.add("check-filter", {
       id: updatedComment._id as string,
       caption: data.text,
@@ -131,7 +164,7 @@ export default class CommentsService {
     if (comment.userId.toString() === userId) {
       isAuthorized = true;
     } else if (post.groupID) {
-      // Check if user is group admin/moderator
+     
       try {
         await this.groupService.checkGroupAdmin(
           post.groupID.toString(),
@@ -139,7 +172,6 @@ export default class CommentsService {
         );
         isAuthorized = true;
       } catch (error) {
-        // Not admin/moderator
       }
     }
 

@@ -3,6 +3,10 @@ import { FollowStauts, IFollow } from "../../types/follow.types";
 import { IUser, UserPrivacy } from "../../types/user.types";
 import FollowRepository from "./follow.repo";
 import UsersRepository from "../users/users.repo";
+import NotificationService from "../notifications/notification.service";
+import { createNotificationDTO, EntityType } from "../../types/notification.types";
+import UsersService from "../users/users.service";
+import mongoose from "mongoose";
 
 export default class FollowService {
   private static instance: FollowService;
@@ -34,6 +38,23 @@ export default class FollowService {
         : FollowStauts.following;
     follow = await this.repo.createFollow(userID, follower, status);
     if (!follow) throw new AppError("Error While creating follow", 500);
+
+   
+      const sender = await UsersService.getInstance().getMe(follower);
+      const message =
+        status === FollowStauts.pending
+          ? `${sender.username} requested to follow you`
+          : `${sender.username} started following you`;
+      const notifData: createNotificationDTO = {
+        sender: sender._id as mongoose.Types.ObjectId,
+        receiver: new mongoose.Types.ObjectId(userID),
+        message,
+        entityID: follow._id as unknown as mongoose.Types.ObjectId,
+        entityType: EntityType.FOLLOW,
+      };
+      await NotificationService.getInstance().createNotificaiton(notifData);
+    
+
     return follow;
   }
   async unFollowUser(
@@ -89,9 +110,7 @@ export default class FollowService {
       throw new AppError("Failed to update follow status", 500);
     }
 
-    // Update counters
-    // request.userId is the one who was requested (Target User) -> Followers + 1
-    // request.follwerId is the one who requested (Follower) -> Following + 1
+  
     await this.userRepo.incFollowers(request.userId.toString(), 1);
     await this.userRepo.incFollowing(request.follwerId.toString(), 1);
 
@@ -150,6 +169,9 @@ export default class FollowService {
       authorsID,
     );
     return follows;
+  }
+  async getFollowByID(id: string) {
+    return await this.repo.getAFollowByID(id);
   }
   static getInstance() {
     if (!FollowService.instance) {

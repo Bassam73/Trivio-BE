@@ -26,10 +26,9 @@ const schema: Schema<IReaction> = new Schema<IReaction>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-// Ensure a user can only have one reaction per post/comment
 schema.index({ userId: 1, modelId: 1, onModel: 1 }, { unique: true });
 
 const reactionModel = mongoose.model<IReaction>("reaction", schema);

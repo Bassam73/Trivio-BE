@@ -8,6 +8,13 @@ import {
   IReaction,
 } from "../../types/reaction.types";
 import { PaginationResult } from "../../types/global";
+import NotificationService from "../notifications/notification.service";
+import {
+  createNotificationDTO,
+  EntityType,
+} from "../../types/notification.types";
+import mongoose, { model } from "mongoose";
+import UsersService from "../users/users.service";
 
 export default class ReactsService {
   private static instance: ReactsService;
@@ -38,16 +45,35 @@ export default class ReactsService {
     }
 
     const reaction = await this.repo.createReaction(data);
-
-    if (data.onModel === "post") {
-      await this.postService.incrementReactionsCount(
+    let entity;
+    let notfiData: createNotificationDTO;
+    const notfiSender = await UsersService.getInstance().getMe(data.userId);
+    let receiver;
+    let notfiMessage;
+    let entityID;
+    console.log(data.onModel);
+    if (data.onModel == "post") {
+      entity = await this.postService.incrementReactionsCount(
         data.modelId,
         data.reaction,
       );
-    } else if (data.onModel === "comment") {
-      await this.commentsRepo.incrementReactionsCount(data.modelId);
+      notfiMessage = `${notfiSender.username} reacted to your post`;
+      receiver = entity?.authorID;
+      entityID = entity?._id;
+    } else if (data.onModel == "comment") {
+      entity = await this.commentsRepo.incrementReactionsCount(data.modelId);
+      notfiMessage = `${notfiSender.username} reacted to your comment`;
+      receiver = entity?.userId;
+      entityID = entity?._id;
     }
-
+    notfiData = {
+      sender: notfiSender._id as mongoose.Types.ObjectId,
+      receiver: receiver as mongoose.Types.ObjectId,
+      message: notfiMessage,
+      entityID: entityID as unknown as mongoose.Types.ObjectId,
+      entityType: EntityType.REACT,
+    };
+    await NotificationService.getInstance().createNotificaiton(notfiData);
     return reaction;
   }
 
@@ -110,6 +136,9 @@ export default class ReactsService {
     }
   }
 
+  async getReactionById(id: string) {
+    return await this.repo.getReactionById(id);
+  }
   async getReactionsByModelId(
     modelId: string,
     query: any,

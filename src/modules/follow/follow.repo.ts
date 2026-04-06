@@ -83,6 +83,9 @@ export default class FollowRepository {
       })
       .select("userId -_id");
   }
+  async getAFollowByID(id: string) {
+    return await followModel.findById(id);
+  }
   static getInstance() {
     if (!FollowRepository.instance) {
       FollowRepository.instance = new FollowRepository();

@@ -277,11 +277,9 @@ export default class GroupService {
     }
 
     if (group.creatorId.toString() == requesterId) {
-      // Creator can demote anyone
       if (dto.targetUserId == requesterId)
         throw new AppError("Creator cannot demote themselves", 400);
     } else {
-      // Admin trying to demote
       const requesterRole = await this.repo.checkMemberRole(
         dto.groupId,
         requesterId,
@@ -394,7 +392,6 @@ export default class GroupService {
     }
 
     await this.repo.updateMemberStatus(dto.groupId, dto.targetUserId, "banned");
-    // Decrement member count as they are effectively removed from active members
     await this.repo.updateMemberCount(dto.groupId, -1);
     if (targetMember.role === "admin") {
       await group.updateOne({ $inc: { admins: -1 } });
@@ -501,7 +498,7 @@ export default class GroupService {
   ): Promise<void> {
     const group = await this.repo.getGroupById(groupId);
     if (!group) throw new AppError("Group not found", 404);
-    const post = await this.postService.getPublicPostsById(postId);
+    const post = await this.postService.getPublicPostById(postId);
     if (!post) throw new AppError("Post not found", 404);
     let deletedPost: IPost;
     if (post.authorID.toString() != userId) {
@@ -548,7 +545,7 @@ export default class GroupService {
     if (!group) throw new AppError("Group not found", 404);
     let post: IPost;
     if (group.privacy == "public") {
-      post = await this.postService.getPublicPostsById(postID);
+      post = await this.postService.getPublicPostById(postID);
     } else {
       const status = await this.repo.checkMemberStatus(groupID, userID);
       if (!status)
@@ -558,7 +555,7 @@ export default class GroupService {
         );
       if (status == "banned")
         throw new AppError("You are banned from this group", 403);
-      post = await this.postService.getPublicPostsById(postID);
+      post = await this.postService.getPublicPostById(postID);
     }
     return post;
   }

@@ -5,7 +5,6 @@ import groupRouter from "./groups/groups.routes";
 import commentsRouter from "./comments/comments.routes";
 import usersRouter from "./users/users.routes";
 import followRouter from "./follow/follow.routes";
-
 import reactsRouter from "./reacts/reacts.routes";
 
 export default function bootstrap(app: Application) {

@@ -210,3 +210,15 @@ export const getMyGroups = catchError(async (req: Request, res: Response) => {
   const groups = await service.getMyGroups(req.user?.id as string, req.query);
   res.status(200).json({ status: "success", data: { groups } });
 });
+
+export const getMyNotifications = catchError(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id as string;
+    const notifications = await service.getUnreadNotifications(userId);
+    res.status(200).json({
+      status: "success",
+      results: notifications.length,
+      data: { notifications },
+    });
+  },
+);

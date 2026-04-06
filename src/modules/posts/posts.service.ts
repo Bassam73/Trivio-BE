@@ -137,6 +137,13 @@ export default class PostService {
       userReact: userReact,
     };
   }
+  async getPublicPostById(id: string): Promise<IPost> {
+    const post = await this.repo.getPostById(id);
+    if (!post) throw new AppError("post not found", 404);
+    if (post.type !== "public") throw new AppError("post is not public", 403);
+    return post;
+  }
+
   async getPostbyId(id: string): Promise<IPost | null> {
     return await this.repo.getPostByID(id);
   }

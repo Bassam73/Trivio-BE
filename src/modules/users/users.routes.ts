@@ -35,6 +35,7 @@ import {
   getChatbotHistory,
   sendMessageChatbot,
   getUserInfo,
+  getMyNotifications,
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -110,4 +111,7 @@ usersRouter.get("/me/my-groups", protectedRoutes, getMyGroups);
 
 usersRouter.get("/chatbot/get-history", protectedRoutes, getChatbotHistory);
 usersRouter.post("/chatbot/send-message", protectedRoutes, sendMessageChatbot);
+
+usersRouter.get("/me/notifications", protectedRoutes, getMyNotifications);
+
 export default usersRouter;
