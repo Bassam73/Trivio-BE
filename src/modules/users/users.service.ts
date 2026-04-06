@@ -5,6 +5,7 @@ import FollowService from "../follow/follow.service";
 import PostService from "../posts/posts.service";
 import GroupService from "../groups/groups.service";
 import UsersRepository from "./users.repo";
+import NotificationService from "../notifications/notification.service";
 
 import bcrypt from "bcrypt";
 import { createMessageDTO } from "../../types/chatbotMessage.types"; 
@@ -284,6 +285,10 @@ export default class UsersService {
       .select("senderType text createdAt -_id");
 
     return messages;
+  }
+
+  async getUnreadNotifications(userId: string) {
+    return await NotificationService.getInstance().getUnreadNotifications(userId);
   }
 
   async sendMessageChatbot(userID: string, message: string) {
