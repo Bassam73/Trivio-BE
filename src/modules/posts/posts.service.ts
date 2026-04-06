@@ -143,8 +143,8 @@ export default class PostService {
   async deletePostById(postId: string, userId: mongoose.Types.ObjectId) {
     const post = await this.repo.getPostById(postId);
     if (!post) throw new AppError("post not found", 404);
-    console.log(post.authorID, userId);
-    if (post.authorID.toString() !== userId.toString()) {
+    console.log(post.authorID._id, userId);
+    if (post.authorID._id.toString() !== userId.toString()) {
       throw new AppError("you are not authorized to delete this post", 403);
     }
     if (post.media && post.media.length > 0) {
