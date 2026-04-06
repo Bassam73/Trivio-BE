@@ -20,6 +20,7 @@ export interface IUser extends Document {
   following?: number;
   followers?: number;
   posts?: number;
+  favEntities?: [number];
   favTeams?: [string];
   favPlayers?: [string];
   privacy?: UserPrivacy;

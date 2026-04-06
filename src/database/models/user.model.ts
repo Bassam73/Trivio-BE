@@ -1,5 +1,6 @@
 import mongoose, { Model, Schema } from "mongoose";
 import { IUser } from "../../types/user.types";
+import { number } from "joi";
 
 const schema: Schema<IUser> = new Schema<IUser>(
   {
@@ -74,6 +75,10 @@ const schema: Schema<IUser> = new Schema<IUser>(
     favPlayers: {
       type: [String],
       default: [],
+    },
+    favEntities : {
+      type : [Number],
+      default : []
     },
     bio: {
       type: String,
