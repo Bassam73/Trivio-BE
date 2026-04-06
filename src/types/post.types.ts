@@ -17,6 +17,7 @@ export interface IPost {
   views?: number;
   flagged?: boolean;
   tags?: [string];
+  shownTags?: boolean;
   commentsCount: number;
   reactionCounts: {
     like: number;
@@ -42,6 +43,7 @@ export interface createPostDTO {
   location?: string; // Profile Or group
   groupID?: mongoose.Types.ObjectId;
   flagged?: boolean;
+  shownTags?: boolean;
 }
 
 export interface updatePostDTO {
