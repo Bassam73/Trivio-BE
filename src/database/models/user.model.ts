@@ -26,6 +26,11 @@ const schema: Schema<IUser> = new Schema<IUser>(
       required: true,
       minlength: 8,
     },
+    relationshipStatus: {
+      type: String,
+      enum: ["following", "pending", "self", "none"],
+      default: "none",
+    },
     passwordChangedAt: {
       type: Date,
     },

@@ -12,6 +12,7 @@ export interface IUser extends Document {
   password?: string;
   passwordChangedAt?: Date;
   code?: number;
+  relationshipStatus?: string;
   codeCreatedAt?: Date;
   isVerified: boolean;
   OTP?: number;
