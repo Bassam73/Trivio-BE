@@ -84,7 +84,10 @@ usersRouter.patch(
   validator.body(updateProfileVal),
   updateProfile,
 );
-usersRouter.get("/:id", getUserInfo);
+
+usersRouter.get("/:id",protectedRoutes,getUserInfo);
+
+
 usersRouter.get(
   "/:id/followers",
   protectedRoutes,

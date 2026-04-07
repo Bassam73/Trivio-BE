@@ -93,16 +93,15 @@ export default class UsersService {
     if (!user) throw new AppError("User not found", 404);
     return user;
   }
-  //  async getAnotherUser(userId: string): Promise<IUser> {
-  //    const user = await this.repo.getUserByID(userId);
-  //    if (!user) throw new AppError("User not found", 404);
-  //   //  const relationshipStatus = await this.followSerivce.getRelationshipStatus(
-  //   //    currentUserId,
-  //   //    userId,
-  //   //  );
-  //   //  user.relationshipStatus = relationshipStatus;
-  //    return user;
-  // }
+   async getAnotherUser(userId: string, currentUserId: string): Promise<{ user: IUser; relationshipStatus: string }> {
+     const user = await this.repo.getUserByID(userId);
+     if (!user) throw new AppError("User not found", 404);
+     const relationshipStatus = await this.followSerivce.getRelationshipStatus(
+       currentUserId,
+       userId,
+     );
+     return { user, relationshipStatus };
+  }
   
 
   async getLikedPosts(userId: string, page: number, limit: number): Promise<any> {
