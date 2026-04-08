@@ -1,4 +1,5 @@
 import userModel from "../../database/models/user.model";
+import savedPostModel from "../../database/models/savedPosts.model";
 import { IUser } from "../../types/user.types";
 
 export default class UsersRepository {
@@ -70,6 +71,33 @@ export default class UsersRepository {
   );
 }
 
+  async savePost(userId: string, postId: string): Promise<boolean> {
+    const savedPost = await savedPostModel.findOneAndUpdate(
+      { userId, postId },
+      { userId, postId },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    return !!savedPost;
+  }
+
+  async unsavePost(userId: string, postId: string): Promise<boolean> {
+    const result = await savedPostModel.deleteOne({ userId, postId });
+    return result.deletedCount > 0;
+  }
+
+  async getSavedPosts(userId: string, page: number, limit: number): Promise<string[]> {
+    const savedPosts = await savedPostModel
+      .find({ userId })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    return savedPosts.map((saved: any) => saved.postId);
+  }
+
+  async isSavedPost(userId: string, postId: string): Promise<boolean> {
+    const saved = await savedPostModel.findOne({ userId, postId });
+    return !!saved;
+  }
 
   async changePassword(userId: string, newPassword: string): Promise<void> {
     await userModel.findByIdAndUpdate(

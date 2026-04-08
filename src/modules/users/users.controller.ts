@@ -184,6 +184,22 @@ export const getChatbotHistory = catchError(async (req: Request, res: Response) 
   const messages = await service.getChatbotHistory(id);
   res.status(200).json({ status: "success", data: { messages } });
 });
+
+
+export const savePost = catchError(async (req: Request, res: Response) => {
+  const userId = req.user?._id as string;
+  const { postId } = req.body;
+  await service.savePost(userId, postId);
+  res.status(201).json({ status: "success" });
+});
+
+export const unsavePost = catchError(async (req: Request, res: Response) => {
+  const userId = req.user?._id as string;
+  const { postId } = req.body;
+  await service.unsavePost(userId, postId);
+  res.status(204).send();
+});
+
 //2- update email in another route to handle the email verification process
 
 

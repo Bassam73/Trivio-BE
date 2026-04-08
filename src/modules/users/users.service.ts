@@ -196,7 +196,23 @@ export default class UsersService {
     const hashedNewPassword = await bcrypt.hash(newPassword, parseInt(process.env.SALT_ROUNDS!));
     await this.repo.changePassword(userId, hashedNewPassword);
   }
-  
+
+   async savePost(userId: string, postId: string): Promise<boolean> {
+    return await this.repo.savePost(userId, postId);
+  }
+
+  async unsavePost(userId: string, postId: string): Promise<boolean> {
+    return await this.repo.unsavePost(userId, postId);
+  }
+
+  async getSavedPosts(userId: string, page: number, limit: number): Promise<string[]> {
+    return await this.repo.getSavedPosts(userId, page, limit);
+  }
+
+  async isSavedPost(userId: string, postId: string): Promise<boolean> {
+    return await this.repo.isSavedPost(userId, postId);
+  }
+
   async suggestUsers(userId: string, limit: number = 10): Promise<IUser[]> {
     const user = await this.repo.getUserByID(userId);
     if (!user) throw new AppError("User not found", 404);
@@ -243,6 +259,7 @@ export default class UsersService {
 
     return suggestions;
   }
+
   // import { Request, Response } from "express";
 // The URL of your deployed Python FastAPI (Captain Magdy)
 // Make sure to put this in your .env file in production!
