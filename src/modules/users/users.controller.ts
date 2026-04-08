@@ -124,6 +124,11 @@ export const togglePrivacy = catchError(async (req: Request, res: Response) => {
 
 });
 export const getSavedPosts = catchError(async (req: Request, res: Response) => {
+  const id = req.user?._id as string;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const savedPosts = await service.getSavedPosts(id, page, limit);
+  res.status(200).json({ status: "success", data: { savedPosts } });
   // to be implemented in the future
 });
 
