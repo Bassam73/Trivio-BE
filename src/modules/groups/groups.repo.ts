@@ -31,9 +31,15 @@ export default class GroupRepository {
       new: true,
     });
   }
-  async getGroups(searchQuery: any, userId: string): Promise<PaginationResult<IGroup>> {
+  async getGroups(
+    searchQuery: any,
+    userId: string,
+  ): Promise<PaginationResult<IGroup>> {
     const filter = userId ? { creatorId: { $ne: userId } } : {};
-    const apiFeatures = new ApiFeatures<IGroup>(groupModel.find(filter), searchQuery)
+    const apiFeatures = new ApiFeatures<IGroup>(
+      groupModel.find(filter).lean(),
+      searchQuery,
+    )
       .fields()
       .filter()
       .search("name") // Fixed: Search by name
@@ -115,7 +121,9 @@ export default class GroupRepository {
     groupId: string,
     userId: string,
   ): Promise<IJoinRequest | null> {
-    return await joinRequestModel.findOne({ groupId, userId }).populate("userId");
+    return await joinRequestModel
+      .findOne({ groupId, userId })
+      .populate("userId");
   }
 
   async getJoinRequestById(requestId: string): Promise<IJoinRequest | null> {
@@ -199,7 +207,7 @@ export default class GroupRepository {
     const apiFeatures = new ApiFeatures<IGroupMember>(
       groupMemberModel.find(filter).populate("userId"),
       searchQuery,
-    ).pagination(10); 
+    ).pagination(10);
 
     const result: PaginationResult<IGroupMember> = {
       data: await apiFeatures.getQuery(),
@@ -213,9 +221,7 @@ export default class GroupRepository {
     searchQuery: any,
   ): Promise<PaginationResult<IJoinRequest>> {
     const apiFeatures = new ApiFeatures<IJoinRequest>(
-      joinRequestModel
-        .find({ groupId, status: "pending" })
-        .populate("userId"),
+      joinRequestModel.find({ groupId, status: "pending" }).populate("userId"),
       searchQuery,
     ).pagination(10);
 
@@ -230,8 +236,33 @@ export default class GroupRepository {
   }
 
   async getMyGroups(userID: string, query: any) {
-    const apiFeatures = new ApiFeatures(groupModel.find({ creatorId: userID }), query).search("name");
+    const apiFeatures = new ApiFeatures(
+      groupModel.find({ creatorId: userID }),
+      query,
+    ).search("name");
     return await apiFeatures.getQuery();
+  }
+  async getJoinedGroupsByGroupIDs(
+    userID: string,
+    groupsID: string[],
+  ): Promise<IGroupMember[]> {
+    return await groupMemberModel
+      .find({
+        userId: userID,
+        groupId: { $in: groupsID },
+        status: "active",
+      })
+      .select("groupId");
+  }
+  async getRequestsByGroupsID(
+    userID: string,
+    groupsID: string[],
+  ): Promise<IJoinRequest[]> {
+    return await joinRequestModel.find({
+      userId: userID,
+      groupId: { $in: groupsID },
+      status: "pending",
+    });
   }
   static getInstance() {
     if (!GroupRepository.instance) {
@@ -239,11 +270,17 @@ export default class GroupRepository {
     }
     return GroupRepository.instance;
   }
+
   async getUsersJoinedGroups(userID: string, query: any) {
-    const memberships = await groupMemberModel.find({ userId: userID }).select("groupId");
+    const memberships = await groupMemberModel
+      .find({ userId: userID })
+      .select("groupId");
     const groupIds = memberships.map((m) => m.groupId);
-    
-    const apiFeatures = new ApiFeatures(groupModel.find({ _id: { $in: groupIds } }), query).search("name");
+
+    const apiFeatures = new ApiFeatures(
+      groupModel.find({ _id: { $in: groupIds } }),
+      query,
+    ).search("name");
     return await apiFeatures.getQuery();
   }
 }

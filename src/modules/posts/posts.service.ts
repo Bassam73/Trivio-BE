@@ -287,6 +287,12 @@ export default class PostService {
   ): Promise<PaginationResult<IPost>> {
     return this.repo.getGroupPosts(groupId, query);
   }
+  async getUserPostsById(userID: string) {
+    const posts = await this.repo.getUserPostsByID(userID);
+    if (posts.length == 0)
+      throw new AppError("There is no posts for this user", 404);
+    return posts;
+  }
   static getInstace() {
     if (!PostService.instance) {
       PostService.instance = new PostService(

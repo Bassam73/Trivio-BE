@@ -19,7 +19,7 @@ export default class NotificationRepository {
     return await notificationModel.findByIdAndUpdate(
       notificationId,
       { isRead: true },
-      { new: true }
+      { new: true },
     );
   }
 

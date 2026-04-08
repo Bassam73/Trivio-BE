@@ -148,6 +148,7 @@ export default class ReactsService {
   async getReactionsByPostsIDs(userID: string, postsID: string[]) {
     return await this.repo.getReactionsByPostsIDs(userID, postsID);
   }
+ 
   static getInstance() {
     if (!ReactsService.instance) {
       ReactsService.instance = new ReactsService(

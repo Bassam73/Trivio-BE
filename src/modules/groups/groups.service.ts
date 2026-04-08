@@ -52,7 +52,7 @@ export default class GroupService {
 
     const posts = await PostRepository.getInstace().getPostsByGroupId(id);
     await Promise.all(
-      posts.map((post) => this.postService.deleteGroupPost(post._id as string))
+      posts.map((post) => this.postService.deleteGroupPost(post._id as string)),
     );
 
     await this.repo.deleteGroupById(id);
@@ -69,11 +69,53 @@ export default class GroupService {
     if (!group) throw new AppError("group not found", 404);
     return group;
   }
-  async getGroups(searchQuery: any, userId: string): Promise<PaginationResult<IGroup>> {
-    console.log("userId in service" ,userId)  
-    const result = await this.repo.getGroups(searchQuery, userId);
+  async getGroups(searchQuery: any, userId: string) {
+    const result: PaginationResult<IGroup> = await this.repo.getGroups(
+      searchQuery,
+      userId,
+    );
+
     if (result.data.length === 0) throw new AppError("no groups found", 404);
-    return result;
+
+    const groupIDs = result.data.map((group) => {
+      return group._id as string;
+    });
+
+    console.log("Group Ids : ", groupIDs);
+
+    const [memberships, requests] = await Promise.all([
+      this.repo.getJoinedGroupsByGroupIDs(userId, groupIDs),
+      this.repo.getRequestsByGroupsID(userId, groupIDs),
+    ]);
+
+    const memberGroupIds = new Set(
+      memberships.map((member: any) => member.groupId.toString()),
+    );
+    const requestedGroupIds = new Set(
+      requests.map((request: any) => request.groupId.toString()),
+    );
+
+    const groupsWithStatus = result.data.map((group: any) => {
+      const groupIdStr = group._id.toString();
+
+      let status = "None";
+
+      if (memberGroupIds.has(groupIdStr)) {
+        status = "Member";
+      } else if (requestedGroupIds.has(groupIdStr)) {
+        status = "Requested";
+      }
+
+      return {
+        ...group,
+        membershipStatus: status,
+      };
+    });
+
+    return {
+      ...result,
+      data: groupsWithStatus,
+    };
   }
   async updateGroupById(data: updateGroupDTO): Promise<IGroup | null> {
     try {
@@ -167,7 +209,7 @@ export default class GroupService {
     // Add member
     await this.repo.joinGroup(
       groupId,
-      request.userId.toString(),
+      request.userId._id as unknown as string,
       "member",
       "active",
     );
@@ -447,7 +489,7 @@ export default class GroupService {
     groupId: string,
     query: any,
   ): Promise<PaginationResult<IGroupMember>> {
-    return await this.repo.getMembers(groupId, query, "member", "active");
+    return await this.repo.getMembers(groupId, query, undefined, "active");
   }
 
   async getGroupAdmins(
@@ -464,10 +506,7 @@ export default class GroupService {
     return await this.repo.getMembers(groupId, query, "moderator", "active");
   }
 
-  public async checkGroupAdmin(
-    groupId: string,
-    userId: string,
-  ): Promise<void> {
+  public async checkGroupAdmin(groupId: string, userId: string): Promise<void> {
     const role = await this.repo.checkMemberRole(groupId, userId);
     if (!role || (role !== "admin" && role !== "moderator")) {
       throw new AppError("You are not authorized (Admin/Moderator only)", 403);
@@ -612,7 +651,7 @@ export default class GroupService {
   ): Promise<boolean> {
     const memberRole = await this.repo.checkMemberRole(groupID, userID);
     if (!memberRole) return false;
-    return true
+    return true;
   }
   static getInstance() {
     if (!GroupService.instance) {

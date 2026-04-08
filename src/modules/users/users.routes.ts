@@ -36,6 +36,9 @@ import {
   sendMessageChatbot,
   getUserInfo,
   getMyNotifications,
+  getUserPostsByID,
+  savePost,
+  unsavePost,
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -84,9 +87,12 @@ usersRouter.patch(
   validator.body(updateProfileVal),
   updateProfile,
 );
+usersRouter.post("/me/save-posts", protectedRoutes, savePost);
 
-usersRouter.get("/:id",protectedRoutes,getUserInfo);
+usersRouter.delete("/me/unsave-posts", protectedRoutes, unsavePost);
 
+usersRouter.get("/me/save-posts", protectedRoutes, getSavedPosts);
+usersRouter.get("/:id", protectedRoutes, getUserInfo);
 
 usersRouter.get(
   "/:id/followers",
@@ -101,7 +107,12 @@ usersRouter.get(
   validator.params(paramsIdVal),
   getFollowing,
 );
-
+usersRouter.get(
+  "/:id/posts",
+  protectedRoutes,
+  validator.params(paramsIdVal),
+  getUserPostsByID,
+);
 usersRouter.get(
   "/:id/relationship-status",
   protectedRoutes,

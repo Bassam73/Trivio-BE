@@ -62,7 +62,8 @@ export default class PostRepository {
     const apiFeatures = new ApiFeatures<IPost>(
       postModel
         .find({ location: "group", groupID: groupId })
-        .populate("groupID").populate("authorID"),
+        .populate("groupID")
+        .populate("authorID"),
       searchQuery,
     )
       .filter()
@@ -79,13 +80,17 @@ export default class PostRepository {
   }
 
   async getPostsByGroupId(groupId: string): Promise<IPost[]> {
-    return await postModel.find({ location: "group", groupID: groupId }).populate("authorID");
+    return await postModel
+      .find({ location: "group", groupID: groupId })
+      .populate("authorID");
   }
 
   async findPostsByIds(postIds: string[]) {
-    return await postModel.find({
-      _id: { $in: postIds },
-    }).populate("authorID");
+    return await postModel
+      .find({
+        _id: { $in: postIds },
+      })
+      .populate("authorID");
   }
   async findPostsByUserId(
     userId: string,
@@ -112,6 +117,9 @@ export default class PostRepository {
   }
   async getPostByID(id: string): Promise<IPost | null> {
     return await postModel.findById(id).populate("authorID");
+  }
+  async getUserPostsByID(userID: string): Promise<IPost[]> {
+    return await postModel.find({ authorID: userID });
   }
   static getInstace() {
     if (!PostRepository.instance) {
