@@ -93,6 +93,10 @@ const schema: Schema<IUser> = new Schema<IUser>(
       type: String,
       // default: `${process.env.BASE_URL || "http://localhost:3500"}/uploads/avatars/default-avatar.png`,
     },
+    fcmTokens: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

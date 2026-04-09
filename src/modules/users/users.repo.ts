@@ -162,6 +162,27 @@ export default class UsersRepository {
   async decrementUserPostsCount(userID: string) {
     return await userModel.findByIdAndUpdate(userID, { $inc: { posts: -1 } });
   }
+
+  async addFcmToken(userId: string, token: string): Promise<void> {
+    await userModel.findByIdAndUpdate(userId, {
+      $addToSet: { fcmTokens: token },
+    });
+  }
+
+  async removeFcmToken(userId: string, token: string): Promise<void> {
+    await userModel.findByIdAndUpdate(userId, {
+      $pull: { fcmTokens: token },
+    });
+  }
+
+  async getFcmTokens(userId: string): Promise<string[]> {
+    const user = await userModel
+      .findById(userId)
+      .select("fcmTokens")
+      .lean<{ fcmTokens?: string[] }>();
+    return user?.fcmTokens ?? [];
+  }
+
   static getInstance() {
     if (!UsersRepository.instance) {
       UsersRepository.instance = new UsersRepository();

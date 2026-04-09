@@ -423,6 +423,14 @@ export default class UsersService {
   async unsavePost(userId: string, postId: string): Promise<boolean> {
     return await this.repo.unsavePost(userId, postId);
   }
+  async registerFcmToken(userId: string, token: string): Promise<void> {
+    await this.repo.addFcmToken(userId, token);
+  }
+
+  async unregisterFcmToken(userId: string, token: string): Promise<void> {
+    await this.repo.removeFcmToken(userId, token);
+  }
+
   async incrementUsersPostsCount(userID: string) {
     return await this.repo.incrementUserPostsCount(userID);
   }

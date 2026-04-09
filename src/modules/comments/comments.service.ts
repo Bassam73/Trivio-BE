@@ -69,6 +69,7 @@ export default class CommentsService {
         message: `${sender.username} commented on your post`,
         entityID: comment._id as unknown as mongoose.Types.ObjectId,
         entityType: EntityType.COMMENT,
+        postId: post._id as unknown as mongoose.Types.ObjectId,
       };
       await NotificationService.getInstance().createNotificaiton(notifData);
     }
@@ -104,6 +105,7 @@ export default class CommentsService {
         message: `${sender.username} replied to your comment`,
         entityID: reply._id as unknown as mongoose.Types.ObjectId,
         entityType: EntityType.COMMENT,
+        postId: new mongoose.Types.ObjectId(data.postId),
       };
       await NotificationService.getInstance().createNotificaiton(notifData);
     }

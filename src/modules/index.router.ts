@@ -6,6 +6,7 @@ import commentsRouter from "./comments/comments.routes";
 import usersRouter from "./users/users.routes";
 import followRouter from "./follow/follow.routes";
 import reactsRouter from "./reacts/reacts.routes";
+import notificationRouter from "./notifications/notification.routes";
 
 export default function bootstrap(app: Application) {
   app.get("/", (req, res) => {
@@ -18,4 +19,5 @@ export default function bootstrap(app: Application) {
   app.use("/api/v1/users", usersRouter);
   app.use("/api/v1/follow-requests", followRouter);
   app.use("/api/v1/reacts", reactsRouter);
+  app.use("/api/v1/notifications", notificationRouter);
 }

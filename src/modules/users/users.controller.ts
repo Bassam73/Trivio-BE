@@ -260,3 +260,23 @@ export const getMyNotifications = catchError(
     });
   },
 );
+
+export const registerFcmToken = catchError(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id as string;
+    const { token } = req.body;
+    if (!token) throw new Error("FCM token is required");
+    await service.registerFcmToken(userId, token);
+    res.status(200).json({ status: "success" });
+  },
+);
+
+export const unregisterFcmToken = catchError(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id as string;
+    const { token } = req.body;
+    if (!token) throw new Error("FCM token is required");
+    await service.unregisterFcmToken(userId, token);
+    res.status(200).json({ status: "success" });
+  },
+);

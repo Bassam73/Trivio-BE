@@ -45,37 +45,44 @@ export default class ReactsService {
     }
 
     const reaction = await this.repo.createReaction(data);
-    let entity;
-    let notfiData: createNotificationDTO;
-    const notfiSender = await UsersService.getInstance().getMe(data.userId);
-    let receiver;
-    let notfiMessage;
-    let entityID;
-    console.log(data.onModel);
-    if (data.onModel == "post") {
-      entity = await this.postService.incrementReactionsCount(
-        data.modelId,
-        data.reaction,
-      );
-      notfiMessage = `${notfiSender.username} reacted to your post`;
-      receiver = entity?.authorID;
-      entityID = entity?._id;
-    } else if (data.onModel == "comment") {
-      entity = await this.commentsRepo.incrementReactionsCount(data.modelId);
-      notfiMessage = `${notfiSender.username} reacted to your comment`;
-      receiver = entity?.userId;
-      entityID = entity?._id;
-    }
-    notfiData = {
-      sender: notfiSender._id as mongoose.Types.ObjectId,
-      receiver: receiver as mongoose.Types.ObjectId,
-      message: notfiMessage,
-      entityID: entityID as unknown as mongoose.Types.ObjectId,
-      entityType: EntityType.REACT,
-    };
-    await NotificationService.getInstance().createNotificaiton(notfiData);
+    await this.sendReactionNotification(data);
     return reaction;
   }
+
+  private async sendReactionNotification(
+    data: createReactionDTO,
+  ): Promise<void> {
+    const isPost = data.onModel === "post";
+
+    const entity = isPost
+      ? await this.postService.incrementReactionsCount(
+          data.modelId,
+          data.reaction,
+        )
+      : await this.commentsRepo.incrementReactionsCount(data.modelId);
+
+    if (!entity) return;
+
+    const sender = await UsersService.getInstance().getMe(data.userId);
+
+    const notifData: createNotificationDTO = {
+      sender: sender._id as mongoose.Types.ObjectId,
+      receiver: (isPost
+        ? (entity as any).authorID
+        : (entity as any).userId) as mongoose.Types.ObjectId,
+      message: isPost
+        ? `${sender.username} reacted to your post`
+        : `${sender.username} reacted to your comment`,
+      entityID: entity._id as unknown as mongoose.Types.ObjectId,
+      entityType: EntityType.REACT,
+      postId: isPost
+        ? (entity._id as unknown as mongoose.Types.ObjectId)
+        : ((entity as any).postId as mongoose.Types.ObjectId),
+    };
+
+    await NotificationService.getInstance().createNotificaiton(notifData);
+  }
+
 
   async updateReaction(data: updateReactionDTO): Promise<IReaction> {
     const reaction = await this.repo.getReactionById(data.reactionId);

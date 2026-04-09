@@ -92,6 +92,11 @@ const filterProcessor = async (job: Job<FilterJobData>): Promise<void> => {
         message,
         entityID: entityObjectId,
         entityType: isPost ? EntityType.POST : EntityType.COMMENT,
+        postId: isPost
+          ? entityObjectId
+          : postID
+            ? new mongoose.Types.ObjectId(postID)
+            : undefined,
       };
 
       try {

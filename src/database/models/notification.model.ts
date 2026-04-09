@@ -32,6 +32,11 @@ const schema: Schema<INotification> = new Schema<INotification>(
       type: Schema.Types.ObjectId,
       required: true,
     },
+    postId: {
+      type: Schema.Types.ObjectId,
+      ref: "post",
+      required: false,
+    },
   },
   { timestamps: true }
 );

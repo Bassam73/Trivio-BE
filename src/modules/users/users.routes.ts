@@ -39,6 +39,8 @@ import {
   getUserPostsByID,
   savePost,
   unsavePost,
+  registerFcmToken,
+  unregisterFcmToken,
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -127,5 +129,8 @@ usersRouter.get("/chatbot/get-history", protectedRoutes, getChatbotHistory);
 usersRouter.post("/chatbot/send-message", protectedRoutes, sendMessageChatbot);
 
 usersRouter.get("/me/notifications", protectedRoutes, getMyNotifications);
+
+usersRouter.post("/me/fcm-token", protectedRoutes, registerFcmToken);
+usersRouter.delete("/me/fcm-token", protectedRoutes, unregisterFcmToken);
 
 export default usersRouter;

@@ -26,6 +26,7 @@ export interface IUser extends Document {
   favPlayers?: [string];
   privacy?: UserPrivacy;
   likedPosts?: [string];
+  fcmTokens?: string[]; // FCM device tokens for push notifications (one per device)
 }
 
 export interface signupDTO {
