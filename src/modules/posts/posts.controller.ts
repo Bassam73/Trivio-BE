@@ -5,7 +5,7 @@ import { createPostDTO, IPost, updatePostDTO } from "../../types/post.types";
 import mongoose from "mongoose";
 import { createCommentDTO } from "../../types/comment.types";
 import AppError from "../../core/utils/AppError";
-
+import { uploadToCloudinary } from "../../core/utils/upload";
 const service = PostService.getInstace();
 
 const getPublicPosts = catchError(
@@ -19,20 +19,22 @@ const createPost = catchError(
   async (req: Request, res: Response, next: NextFunction) => {
     const data: createPostDTO = req.body;
     const files = req.files as { media?: Express.Multer.File[] };
+
     if (files?.media && files.media.length > 0) {
       console.log("we are in files");
-      data.media = files.media.map(
-        (media) =>
-          `${process.env.BASE_URL || "http://localhost:3500"}/uploads/posts/${
-            media.filename
-          }`,
+
+      const uploadPromises = files.media.map(file =>
+        uploadToCloudinary(file, 'posts')
       );
+
+      const uploadResults = await Promise.all(uploadPromises);
+      data.media = uploadResults.map(result => (result as any).secure_url);
     }
 
     data.authorID = req.user?.id;
     const post = await service.createPost(data);
     res.status(201).json({ status: "success", data: { post } });
-  },
+  }
 );
 
 const getPublicPostsById = catchError(

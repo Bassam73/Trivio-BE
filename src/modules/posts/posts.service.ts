@@ -66,16 +66,8 @@ export default class PostService {
 
       return post;
     } catch (error) {
-      if (data.media && data.media.length > 0) {
-        await Promise.all(
-          data.media.map((media) => {
-            const filename = media.split("/").pop(); // Extract filename from URL
-            return fs.promises
-              .unlink(`uploads/posts/${filename}`)
-              .catch(() => {});
-          }),
-        );
-      }
+      // Note: With Cloudinary, cleanup on error is more complex
+      // Files are already uploaded to cloud, manual cleanup may be needed
       throw error;
     }
   }
@@ -155,14 +147,8 @@ export default class PostService {
       throw new AppError("you are not authorized to delete this post", 403);
     }
     if (post.media && post.media.length > 0) {
-      await Promise.all(
-        post.media.map((file) => {
-          const filename = file.split("/").pop(); // Extract filename from URL
-          return fs.promises
-            .unlink(`uploads/posts/${filename}`)
-            .catch(() => {});
-        }),
-      );
+      // Note: With Cloudinary, file deletion requires public_id
+      // For now, files remain on Cloudinary (could implement cleanup later)
     }
     await this.cascadeDeletePostRelations(postId);
     const deletedPost = await this.repo.deletePostById(postId);
@@ -209,15 +195,8 @@ export default class PostService {
     const post = await this.repo.getPostById(postId);
     if (!post) throw new AppError("post not found", 404);
     if (post.media && post.media.length > 0) {
-      await Promise.all(
-        post.media.map((file) => {
-          const filename = file.split("/").pop();
-          console.log(filename);
-          return fs.promises
-            .unlink(`uploads/groups/posts/${filename}`)
-            .catch(() => {});
-        }),
-      );
+      // Note: With Cloudinary, file deletion requires public_id
+      // For now, files remain on Cloudinary (could implement cleanup later)
     }
     await this.cascadeDeletePostRelations(postId);
     const deletedPost = await this.repo.deletePostById(postId);

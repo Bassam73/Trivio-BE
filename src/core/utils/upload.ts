@@ -1,44 +1,29 @@
 import multer from "multer";
 import path from "path";
-import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
+import dotenv from "dotenv";
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    let uploadPath = "";
+dotenv.config();
 
-    if (req.baseUrl.includes("posts")) {
-      console.log(__dirname);
-      uploadPath = path.join(__dirname, "../../../uploads/posts");
-    } else if (req.baseUrl.includes("groups")) {
-      if(req.url.includes("/post")){
-        uploadPath = path.join(__dirname, "../../../uploads/groups/posts");
-      }else{
-        uploadPath = path.join(__dirname, "../../../uploads/groups");
-      }
-    } else {
-      uploadPath = path.join(__dirname, "../../../uploads/avatars");
-    }
-    fs.mkdirSync(uploadPath, { recursive: true });
-
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const extension = path.extname(file.originalname);
-    cb(null, file.fieldname + "-" + uniqueSuffix + extension);
-  },
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+const storage = multer.memoryStorage();
 
 const fileFilter = (
   req: any,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  const allowedTypes = /jpeg|jpg|png|gif|mp4|mkv|avi|mov|wmv|flv|webm|matroska|msvideo|quicktime/;
+  const allowedTypes = /jpeg|jpg|png|gif|mp4|mkv|avi|mov|wmv|flv|webm/;
   const extname = allowedTypes.test(
     path.extname(file.originalname).toLowerCase()
   );
   const mimetype = allowedTypes.test(file.mimetype);
+  
   if (extname && mimetype) {
     cb(null, true);
   } else {
@@ -61,6 +46,7 @@ const fileFilterImage = (
     path.extname(file.originalname).toLowerCase()
   );
   const mimetype = allowedTypes.test(file.mimetype);
+  
   if (extname && mimetype) {
     cb(null, true);
   } else {
@@ -73,4 +59,25 @@ const uploadImage = multer({
   fileFilter: fileFilterImage,
 });
 
-export { uploadMedia, uploadImage };
+// 4. Cloudinary Upload Function
+const uploadToCloudinary = async (file: Express.Multer.File, folder: string = 'posts'): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: 'auto',
+        public_id: `${Date.now()}-${Math.round(Math.random() * 1e9)}`,
+      },
+      (error: any, result: any) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+    uploadStream.end(file.buffer);
+  });
+};
+
+export { uploadMedia, uploadImage, uploadToCloudinary, cloudinary };

@@ -35,10 +35,8 @@ export default class GroupService {
       );
       return group;
     } catch (err) {
-      if (data.logo) {
-        const filename = data.logo.split("/").pop();
-        await fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
-      }
+      // Note: With Cloudinary, cleanup on error is more complex
+      // Files are already uploaded to cloud, manual cleanup may be needed
       throw err;
     }
   }
@@ -60,8 +58,8 @@ export default class GroupService {
     await this.repo.deleteJoinRequestsByGroupId(id);
 
     if (group.logo) {
-      const filename = group.logo.split("/").pop();
-      await fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
+      // Note: With Cloudinary, file deletion requires public_id
+      // For now, files remain on Cloudinary (could implement cleanup later)
     }
   }
   async getGroupById(id: string): Promise<IGroup> {
@@ -126,17 +124,15 @@ export default class GroupService {
       }
       if (data.data.logo) {
         if (group.logo) {
-          const filename = group.logo.split("/").pop();
-          fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
+          // Note: With Cloudinary, file deletion requires public_id
+          // For now, old files remain on Cloudinary (could implement cleanup later)
         }
       }
       const updatedGroup = await this.repo.updateGroupById(data);
       return updatedGroup;
     } catch (err) {
-      if (data.data.logo) {
-        const filename = data.data.logo.split("/").pop();
-        await fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
-      }
+      // Note: With Cloudinary, cleanup on error is more complex
+      // Files are already uploaded to cloud, manual cleanup may be needed
       throw err;
     }
   }
@@ -519,14 +515,8 @@ export default class GroupService {
       const post = await this.postService.createPost(data);
       return post;
     } catch (err) {
-      if (data.media) {
-        for (const media of data.media) {
-          const filename = media.split("/").pop();
-          await fs.promises
-            .unlink(`uploads/groups/posts/${filename}`)
-            .catch(() => {});
-        }
-      }
+      // Note: With Cloudinary, cleanup on error is more complex
+      // Files are already uploaded to cloud, manual cleanup may be needed
       throw err;
     }
   }
