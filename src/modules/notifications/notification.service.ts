@@ -101,6 +101,16 @@ export default class NotificationService {
       throw new AppError("Error While updating the notification", 500);
     }
   }
+
+  async deleteNotificationByEntityId(entityID: string): Promise<void> {
+    await this.repo.deleteNotificationByEntityId(entityID);
+  }
+
+  async deleteNotificationsByEntityIds(entityIDs: string[]): Promise<void> {
+    if (entityIDs.length > 0) {
+      await this.repo.deleteNotificationsByEntityIds(entityIDs);
+    }
+  }
   public static getInstance() {
     if (!NotificationService.instance) {
       const repo = NotificationRepository.getInstnce();

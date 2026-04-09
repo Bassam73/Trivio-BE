@@ -27,6 +27,7 @@ import {
   getGroupPosts,
   getGroupPostById,
   getGroupFeed,
+  getUserRole,
 } from "./groups.controller";
 import {
   createGroupVal,
@@ -67,6 +68,10 @@ groupRouter
     validator.body(updateGroupVal),
     updateGroup,
   );
+
+groupRouter
+  .route("/:id/role")
+  .get(protectedRoutes, validator.params(paramsIdVal), getUserRole);
 
 groupRouter
   .route("/:id/join")

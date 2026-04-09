@@ -620,6 +620,37 @@ export default class GroupService {
     if (!memberRole) return false;
     return true;
   }
+
+  async getUserGroupRole(
+    groupId: string,
+    userId: string,
+  ): Promise<string> {
+    const group = await this.repo.getGroupById(groupId);
+    if (!group) throw new AppError("Group not found", 404);
+    
+    if (group.creatorId.toString() === userId) {
+      return "creator";
+    }
+
+    const memberStatus = await this.repo.checkMemberStatus(groupId, userId);
+    
+    if (!memberStatus) {
+      throw new AppError("You are not authorized to access this group", 403);
+    }
+    
+    if (memberStatus === "banned") {
+      throw new AppError("You are banned from this group", 403);
+    }
+
+    const memberRole = await this.repo.checkMemberRole(groupId, userId);
+    
+    if (!memberRole) {
+      throw new AppError("Role not found", 404);
+    }
+
+    return memberRole;
+  }
+
   static getInstance() {
     if (!GroupService.instance) {
       GroupService.instance = new GroupService();

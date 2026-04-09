@@ -68,6 +68,9 @@ export default class FollowService {
         409,
       );
     await this.repo.deleteFollowByID(follow._id);
+    await NotificationService.getInstance().deleteNotificationByEntityId(
+      follow._id as unknown as string,
+    );
     return follow.status;
   }
   async getFollowRequests(
@@ -130,6 +133,9 @@ export default class FollowService {
     }
 
     await this.repo.deleteFollowRequest(requestId);
+    await NotificationService.getInstance().deleteNotificationByEntityId(
+      requestId,
+    );
   }
 
   async getFollowers(

@@ -26,6 +26,14 @@ export default class NotificationRepository {
     );
   }
 
+  async deleteNotificationByEntityId(entityID: string): Promise<void> {
+    await notificationModel.deleteMany({ entityID });
+  }
+
+  async deleteNotificationsByEntityIds(entityIDs: string[]): Promise<void> {
+    await notificationModel.deleteMany({ entityID: { $in: entityIDs } });
+  }
+
   async getNotificationByID(
     notficationID: string,
   ): Promise<INotification | null> {

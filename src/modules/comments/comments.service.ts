@@ -185,12 +185,20 @@ export default class CommentsService {
     }
 
     let deletedRepliesCount = 0;
+    const entityIdsToDelete: string[] = [cid];
 
     if (comment.parent) {
       await this.repo.decrementRepliesCount(comment.parent.toString());
+      const reactionIds = await ReactsRepository.getInstance().getReactionsIdsByModelId(cid);
+      entityIdsToDelete.push(...reactionIds);
       await ReactsRepository.getInstance().deleteReactionsByModelId(cid);
     } else {
       const replies = await this.repo.getAllRepliesByCommentId(cid);
+      for (const reply of replies) {
+        entityIdsToDelete.push(reply._id as string);
+        const replyReactionIds = await ReactsRepository.getInstance().getReactionsIdsByModelId(reply._id as string);
+        entityIdsToDelete.push(...replyReactionIds);
+      }
       await Promise.all(
         replies.map((reply) =>
           ReactsRepository.getInstance().deleteReactionsByModelId(
@@ -198,10 +206,13 @@ export default class CommentsService {
           ),
         ),
       );
+      const commentReactionIds = await ReactsRepository.getInstance().getReactionsIdsByModelId(cid);
+      entityIdsToDelete.push(...commentReactionIds);
       await ReactsRepository.getInstance().deleteReactionsByModelId(cid);
       deletedRepliesCount = await this.repo.deleteRepliesByParentId(cid);
     }
     await this.repo.deleteCommentById(cid);
+    await NotificationService.getInstance().deleteNotificationsByEntityIds(entityIdsToDelete);
     await this.postService.decrementCommentsCount(
       comment.postId.toString(),
       1 + deletedRepliesCount,

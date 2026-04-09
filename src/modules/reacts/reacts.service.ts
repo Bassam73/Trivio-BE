@@ -130,7 +130,8 @@ export default class ReactsService {
     const deletedReaction = await this.repo.deleteReactionById(id);
     if (!deletedReaction) throw new AppError("Error deleting reaction", 500);
 
-    // Update counts
+    await NotificationService.getInstance().deleteNotificationByEntityId(id);
+
     if (reaction.onModel === "post") {
       await this.postService.decrementReactionsCount(
         reaction.modelId.toString(),

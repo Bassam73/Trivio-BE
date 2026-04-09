@@ -35,6 +35,11 @@ export default class ReactsRepository {
     return result.deletedCount || 0;
   }
 
+  async getReactionsIdsByModelId(modelId: string): Promise<string[]> {
+    const reactions = await reactionModel.find({ modelId }).select("_id");
+    return reactions.map((r) => r._id.toString());
+  }
+
   async updateReactionById(id: string, data: any): Promise<IReaction | null> {
     return await reactionModel.findByIdAndUpdate(id, data, { new: true });
   }
