@@ -14,7 +14,10 @@ import PostService from "../posts/posts.service";
 import GroupService from "../groups/groups.service";
 import ReactsRepository from "../reacts/reacts.repo";
 import NotificationService from "../notifications/notification.service";
-import { createNotificationDTO, EntityType } from "../../types/notification.types";
+import {
+  createNotificationDTO,
+  EntityType,
+} from "../../types/notification.types";
 import UsersService from "../users/users.service";
 import mongoose from "mongoose";
 
@@ -56,20 +59,19 @@ export default class CommentsService {
       filterType: FilterType.comment,
     });
 
-  
-      const post = await this.postService.getPostbyId(data.postId);
-      if (post && post.authorID.toString() !== data.userId) {
-        const sender = await UsersService.getInstance().getMe(data.userId);
-        const notifData: createNotificationDTO = {
-          sender: sender._id as mongoose.Types.ObjectId,
-          receiver: post.authorID as unknown as mongoose.Types.ObjectId,
-          message: `${sender.username} commented on your post`,
-          entityID: comment._id as unknown as mongoose.Types.ObjectId,
-          entityType: EntityType.COMMENT,
-        };
-        await NotificationService.getInstance().createNotificaiton(notifData);
-      }
-   
+    await this.postService.incrementCommentsCount(data.postId);
+    const post = await this.postService.getPostbyId(data.postId);
+    if (post && post.authorID.toString() !== data.userId) {
+      const sender = await UsersService.getInstance().getMe(data.userId);
+      const notifData: createNotificationDTO = {
+        sender: sender._id as mongoose.Types.ObjectId,
+        receiver: post.authorID as unknown as mongoose.Types.ObjectId,
+        message: `${sender.username} commented on your post`,
+        entityID: comment._id as unknown as mongoose.Types.ObjectId,
+        entityType: EntityType.COMMENT,
+      };
+      await NotificationService.getInstance().createNotificaiton(notifData);
+    }
 
     return comment;
   }
@@ -80,7 +82,7 @@ export default class CommentsService {
 
     if (parentComment.parent) {
       throw new AppError("Nested replies are not allowed", 400);
-    } 
+    }
 
     data.postId = parentComment.postId.toString();
 
@@ -94,31 +96,35 @@ export default class CommentsService {
       filterType: FilterType.comment,
     });
 
-   
-      if (parentComment.userId.toString() !== data.userId) {
-        const sender = await UsersService.getInstance().getMe(data.userId);
-        const notifData: createNotificationDTO = {
-          sender: sender._id as mongoose.Types.ObjectId,
-          receiver: parentComment.userId as unknown as mongoose.Types.ObjectId,
-          message: `${sender.username} replied to your comment`,
-          entityID: reply._id as unknown as mongoose.Types.ObjectId,
-          entityType: EntityType.COMMENT,
-        };
-        await NotificationService.getInstance().createNotificaiton(notifData);
-      }
-    
+    if (parentComment.userId.toString() !== data.userId) {
+      const sender = await UsersService.getInstance().getMe(data.userId);
+      const notifData: createNotificationDTO = {
+        sender: sender._id as mongoose.Types.ObjectId,
+        receiver: parentComment.userId as unknown as mongoose.Types.ObjectId,
+        message: `${sender.username} replied to your comment`,
+        entityID: reply._id as unknown as mongoose.Types.ObjectId,
+        entityType: EntityType.COMMENT,
+      };
+      await NotificationService.getInstance().createNotificaiton(notifData);
+    }
 
     return reply;
   }
 
-  async getReplies(cid: string, query: any): Promise<PaginationResult<IComment>> {
+  async getReplies(
+    cid: string,
+    query: any,
+  ): Promise<PaginationResult<IComment>> {
     const parentComment = await this.repo.getCommentById(cid);
     if (!parentComment) throw new AppError("Parent comment not found", 404);
 
     return await this.repo.getRepliesByCommentId(cid, query);
   }
 
-  async getPostComments(postId: string, query: any): Promise<PaginationResult<IComment>> {
+  async getPostComments(
+    postId: string,
+    query: any,
+  ): Promise<PaginationResult<IComment>> {
     const post = await this.postService.getPostbyId(postId);
     if (!post) throw new AppError("Post not found", 404);
 
@@ -136,7 +142,7 @@ export default class CommentsService {
     const updatedComment = await this.repo.updateCommentById(data.cid, {
       text: data.text,
       isEdited: true,
-      flagged: false, 
+      flagged: false,
     });
 
     if (!updatedComment) throw new AppError("Error updating comment", 500);
@@ -154,25 +160,22 @@ export default class CommentsService {
     const comment = await this.repo.getCommentById(cid);
     if (!comment) throw new AppError("Comment not found", 404);
 
-    const post = await this.postService.getPostbyId(
-      comment.postId.toString(),
-    );
-    if (!post) throw new AppError("Post associated with comment not found", 404);
+    const post = await this.postService.getPostbyId(comment.postId.toString());
+    if (!post)
+      throw new AppError("Post associated with comment not found", 404);
 
     let isAuthorized = false;
 
     if (comment.userId.toString() === userId) {
       isAuthorized = true;
     } else if (post.groupID) {
-     
       try {
         await this.groupService.checkGroupAdmin(
           post.groupID.toString(),
           userId,
         );
         isAuthorized = true;
-      } catch (error) {
-      }
+      } catch (error) {}
     }
 
     if (!isAuthorized) {
@@ -199,7 +202,7 @@ export default class CommentsService {
     await this.repo.deleteCommentById(cid);
     await this.postService.decrementCommentsCount(
       comment.postId.toString(),
-      1 + deletedRepliesCount
+      1 + deletedRepliesCount,
     );
   }
 

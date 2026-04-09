@@ -148,6 +148,20 @@ export default class UsersRepository {
     return !!saved;
   }
 
+  async incrementUserPostsCount(userID: string) {
+    const result = await userModel.findByIdAndUpdate(
+      userID,
+      { $inc: { posts: 1 } },
+      { new: true },
+    );
+    console.log(
+      "البيانات في الداتابيز حالياً:",
+      await userModel.findById(userID).select("posts"),
+    );
+  }
+  async decrementUserPostsCount(userID: string) {
+    return await userModel.findByIdAndUpdate(userID, { $inc: { posts: -1 } });
+  }
   static getInstance() {
     if (!UsersRepository.instance) {
       UsersRepository.instance = new UsersRepository();

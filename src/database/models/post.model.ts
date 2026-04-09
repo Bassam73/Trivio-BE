@@ -65,10 +65,10 @@ const schema: Schema<IPost> = new Schema<IPost>(
       type: Boolean,
       default: false,
     },
-    tags_id : {
+    tags_id: {
       type: [Number],
       index: true,
-      default : []
+      default: [],
     },
     reactionCounts: {
       like: { type: Number, default: 0 },

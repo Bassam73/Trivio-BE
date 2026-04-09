@@ -25,22 +25,14 @@ export default class GroupService {
   }
 
   async createGroup(data: createGroupDTO): Promise<IGroup> {
-    try {
-      const group = await this.repo.createGroup(data);
-      await this.repo.joinGroup(
-        group._id as string,
-        data.creatorId,
-        "admin",
-        "active",
-      );
-      return group;
-    } catch (err) {
-      if (data.logo) {
-        const filename = data.logo.split("/").pop();
-        await fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
-      }
-      throw err;
-    }
+    const group = await this.repo.createGroup(data);
+    await this.repo.joinGroup(
+      group._id as string,
+      data.creatorId,
+      "admin",
+      "active",
+    );
+    return group;
   }
 
   async deleteGroup(id: string, userID: string): Promise<void> {
@@ -58,11 +50,6 @@ export default class GroupService {
     await this.repo.deleteGroupById(id);
     await this.repo.deleteMembersByGroupId(id);
     await this.repo.deleteJoinRequestsByGroupId(id);
-
-    if (group.logo) {
-      const filename = group.logo.split("/").pop();
-      await fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
-    }
   }
   async getGroupById(id: string): Promise<IGroup> {
     const group = await this.repo.getGroupById(id);
@@ -118,27 +105,13 @@ export default class GroupService {
     };
   }
   async updateGroupById(data: updateGroupDTO): Promise<IGroup | null> {
-    try {
-      const group = await this.repo.getGroupById(data.postId);
-      if (!group) throw new AppError("group not found", 404);
-      if (group.creatorId.toString() != data.userID) {
-        throw new AppError("you are not authorized to update this group", 403);
-      }
-      if (data.data.logo) {
-        if (group.logo) {
-          const filename = group.logo.split("/").pop();
-          fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
-        }
-      }
-      const updatedGroup = await this.repo.updateGroupById(data);
-      return updatedGroup;
-    } catch (err) {
-      if (data.data.logo) {
-        const filename = data.data.logo.split("/").pop();
-        await fs.promises.unlink(`uploads/groups/${filename}`).catch(() => {});
-      }
-      throw err;
+    const group = await this.repo.getGroupById(data.postId);
+    if (!group) throw new AppError("group not found", 404);
+    if (group.creatorId.toString() != data.userID) {
+      throw new AppError("you are not authorized to update this group", 403);
     }
+    const updatedGroup = await this.repo.updateGroupById(data);
+    return updatedGroup;
   }
 
   async joinGroup(groupId: string, userId: string): Promise<string> {
@@ -519,14 +492,8 @@ export default class GroupService {
       const post = await this.postService.createPost(data);
       return post;
     } catch (err) {
-      if (data.media) {
-        for (const media of data.media) {
-          const filename = media.split("/").pop();
-          await fs.promises
-            .unlink(`uploads/groups/posts/${filename}`)
-            .catch(() => {});
-        }
-      }
+      // Note: With Cloudinary, cleanup on error is more complex
+      // Files are already uploaded to cloud, manual cleanup may be needed
       throw err;
     }
   }

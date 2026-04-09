@@ -21,6 +21,7 @@ import CommentsRepository from "../comments/comments.repo";
 import ReactsRepository from "../reacts/reacts.repo";
 import FollowService from "../follow/follow.service";
 import ReactsService from "../reacts/reacts.service";
+import UsersService from "../users/users.service";
 
 export default class PostService {
   private static instance: PostService;
@@ -42,42 +43,31 @@ export default class PostService {
   }
   async createPost(data: createPostDTO) {
     console.time("Total Logic Time");
-    try {
-      if (data.caption) {
-        const caption: string = data.caption;
+    if (data.caption) {
+      const caption: string = data.caption;
 
-        console.time("Mentions ");
-        const mentions: IUser[] | null = await getMentionedUsers(caption);
-        console.timeEnd("Mentions ");
-        if (mentions) {
-          data.mentions = mentions;
-        }
+      console.time("Mentions ");
+      const mentions: IUser[] | null = await getMentionedUsers(caption);
+      console.timeEnd("Mentions ");
+      if (mentions) {
+        data.mentions = mentions;
       }
-      console.time("DB Save");
-      const post = await this.repo.createPost(data);
-      if (data.caption)
-        filterQueue.add("check-filter", {
-          id: post._id as string,
-          caption: data.caption,
-          filterType: FilterType.post,
-        });
-      console.timeEnd("DB Save");
-      console.timeEnd("Total Logic Time");
-
-      return post;
-    } catch (error) {
-      if (data.media && data.media.length > 0) {
-        await Promise.all(
-          data.media.map((media) => {
-            const filename = media.split("/").pop(); // Extract filename from URL
-            return fs.promises
-              .unlink(`uploads/posts/${filename}`)
-              .catch(() => {});
-          }),
-        );
-      }
-      throw error;
     }
+    console.time("DB Save");
+    const post = await this.repo.createPost(data);
+    if (data.caption)
+      filterQueue.add("check-filter", {
+        id: post._id as string,
+        caption: data.caption,
+        filterType: FilterType.post,
+      });
+    console.timeEnd("DB Save");
+    console.timeEnd("Total Logic Time");
+    console.log(data.authorID);
+    const authorID = post.authorID.toString();
+
+    await UsersService.getInstance().incrementUsersPostsCount(authorID);
+    return post;
   }
 
   async getPublicPosts(userID: string): Promise<object[]> {
@@ -130,7 +120,6 @@ export default class PostService {
     ]);
     const userReact = reactsObj.length > 0 ? reactsObj[0].reaction : null;
     const isFollowed = follows.length > 0;
-
     return {
       post: post,
       isFollowed: isFollowed,
@@ -154,19 +143,12 @@ export default class PostService {
     if (post.authorID._id.toString() !== userId.toString()) {
       throw new AppError("you are not authorized to delete this post", 403);
     }
-    if (post.media && post.media.length > 0) {
-      await Promise.all(
-        post.media.map((file) => {
-          const filename = file.split("/").pop(); // Extract filename from URL
-          return fs.promises
-            .unlink(`uploads/posts/${filename}`)
-            .catch(() => {});
-        }),
-      );
-    }
+
     await this.cascadeDeletePostRelations(postId);
     const deletedPost = await this.repo.deletePostById(postId);
-    if (!deletedPost) throw new AppError("error while deleting post", 500);
+    await UsersService.getInstance().decrementUserPostsCount(
+      userId as unknown as string,
+    );
   }
   async updatePostById(data: updatePostDTO): Promise<IPost | null> {
     const post = await this.repo.getPostById(data.postID.toString());
@@ -208,17 +190,6 @@ export default class PostService {
   async deleteGroupPost(postId: string): Promise<IPost> {
     const post = await this.repo.getPostById(postId);
     if (!post) throw new AppError("post not found", 404);
-    if (post.media && post.media.length > 0) {
-      await Promise.all(
-        post.media.map((file) => {
-          const filename = file.split("/").pop();
-          console.log(filename);
-          return fs.promises
-            .unlink(`uploads/groups/posts/${filename}`)
-            .catch(() => {});
-        }),
-      );
-    }
     await this.cascadeDeletePostRelations(postId);
     const deletedPost = await this.repo.deletePostById(postId);
     if (!deletedPost) throw new AppError("error while deleting post", 500);

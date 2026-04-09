@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import catchError from "../../core/middlewares/catchError";
 import GroupService from "./groups.service";
 import {
@@ -7,17 +8,21 @@ import {
   memberActionDTO,
   updateGroupDTO,
 } from "../../types/group.types";
-import { checkGroupRole } from "../../core/middlewares/role.middleware"; // Might not use here directly if Service handles it, but maybe for routes?
+import { checkGroupRole } from "../../core/middlewares/role.middleware";
 import { createPostDTO, updatePostDTO } from "../../types/post.types";
-import mongoose from "mongoose";
+
+import { uploadToCloudinary } from "../../core/utils/upload";
 
 const service = GroupService.getInstance();
 
 export const createGroup = catchError(async (req: Request, res: Response) => {
   const data: createGroupDTO = req.body;
-  data.logo = `${process.env.BASE_URL || "http://localhost:3500"}/uploads/groups/${
-    req.file?.filename
-  }`;
+
+  if (req.file) {
+    const uploadResult = await uploadToCloudinary(req.file, "groups");
+    data.logo = (uploadResult as any).secure_url;
+  }
+
   console.log(req.user?._id);
   data.creatorId = req.user?._id as string;
   const group = await service.createGroup(data);
@@ -38,6 +43,7 @@ export const getGroupById = catchError(async (req: Request, res: Response) => {
     },
   });
 });
+
 export const deleteGroup = catchError(async (req: Request, res: Response) => {
   const postId = req.params.id;
   const userID = req.user?._id as string;
@@ -52,11 +58,12 @@ export const updateGroup = catchError(async (req: Request, res: Response) => {
     postId: req.params.id,
     userID: req.user?._id as string,
   };
+
   if (req.file) {
-    data.data.logo = `${
-      process.env.BASE_URL || "http://localhost:3500"
-    }/uploads/groups/${req.file.filename}`;
+    const uploadResult = await uploadToCloudinary(req.file, "groups");
+    data.data.logo = (uploadResult as any).secure_url;
   }
+
   const group = await service.updateGroupById(data);
   res.status(200).json({
     status: "success",
@@ -126,6 +133,7 @@ export const declineJoinRequest = catchError(
     res.status(200).json({ status: "success", message: "Request declined" });
   },
 );
+
 export const cancelJoinRequest = catchError(
   async (req: Request, res: Response) => {
     await service.cancelJoinRequest(req.params.id, req.user?._id as string);
@@ -236,14 +244,16 @@ export const createGroupPost = catchError(
     data.groupID = req.params.id as unknown as mongoose.Types.ObjectId;
     data.location = "group";
     const files = req.files as { media?: Express.Multer.File[] };
+
     if (files?.media && files.media.length > 0) {
-      data.media = files.media.map(
-        (media) =>
-          `${process.env.BASE_URL || "http://localhost:3500"}/uploads/groups/posts/${
-            media.filename
-          }`,
+      const uploadPromises = files.media.map((file) =>
+        uploadToCloudinary(file, "groups/posts"),
       );
+
+      const uploadResults = await Promise.all(uploadPromises);
+      data.media = uploadResults.map((result) => (result as any).secure_url);
     }
+
     const post = await service.createGroupPost(data);
     res.status(201).json({ status: "success", data: { post } });
   },

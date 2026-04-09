@@ -423,7 +423,12 @@ export default class UsersService {
   async unsavePost(userId: string, postId: string): Promise<boolean> {
     return await this.repo.unsavePost(userId, postId);
   }
-
+  async incrementUsersPostsCount(userID: string) {
+    return await this.repo.incrementUserPostsCount(userID);
+  }
+  async decrementUserPostsCount(userId: string) {
+    return await this.repo.decrementUserPostsCount(userId);
+  }
   async getSavedPosts(
     userId: string,
     page: number,
