@@ -2,4 +2,5 @@ node_modules
 .env
 uploads
 serviceAccountKey.json
-src/config/serviceAccountKey.json
+src/config/serviceAccountKey.json
+dist/
