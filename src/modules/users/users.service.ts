@@ -456,7 +456,7 @@ export default class UsersService {
       postsID.map(async (id) => {
         const post = await PostService.getInstace().getPostbyId(id);
         if (!post) throw new AppError(`PostId : ${id} Not Found`, 404);
-        await redisClient.set(redisKey, id);
+        await redisClient.sadd(redisKey, id);
       }),
     );
     await redisClient.expire(redisKey, 604800);
