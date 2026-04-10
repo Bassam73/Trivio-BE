@@ -280,3 +280,12 @@ export const unregisterFcmToken = catchError(
     res.status(200).json({ status: "success" });
   },
 );
+
+export const MarkPostsAsSeen = catchError(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id as string;
+    const postsID: string[] = req.body.postsID;
+    await service.MarkPostsAsSeen(userId, postsID);
+    res.status(200).json({ status: "success" });
+  },
+);

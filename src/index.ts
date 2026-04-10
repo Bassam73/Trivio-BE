@@ -10,11 +10,9 @@ import redisConnection from "./config/redis";
 import { setupAllWorkers } from "./jobs";
 import path from "path";
 import "./config/firebase"; // initialize Firebase Admin SDK on startup
-
+import redisClient from "./config/redis";
 const app = express();
 dbConnection();
-
-redisConnection();
 
 app.use(express.json());
 app.use(

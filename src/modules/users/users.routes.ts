@@ -3,6 +3,7 @@ import valid from "express-joi-validation";
 import protectedRoutes from "../../core/middlewares/protectedRoutes";
 import {
   changePasswordVal,
+  MarkPostsAsSeenVal,
   paramsIdVal,
   removeFavPlayerVal,
   removeFavTeamVal,
@@ -41,6 +42,7 @@ import {
   unsavePost,
   registerFcmToken,
   unregisterFcmToken,
+  MarkPostsAsSeen,
 } from "./users.controller";
 const validator = valid.createValidator();
 const usersRouter = express.Router();
@@ -133,4 +135,10 @@ usersRouter.get("/me/notifications", protectedRoutes, getMyNotifications);
 usersRouter.post("/me/fcm-token", protectedRoutes, registerFcmToken);
 usersRouter.delete("/me/fcm-token", protectedRoutes, unregisterFcmToken);
 
+usersRouter.post(
+  "/me/mark-posts-as-seen",
+  protectedRoutes,
+  validator.body(MarkPostsAsSeenVal),
+  MarkPostsAsSeen,
+);
 export default usersRouter;

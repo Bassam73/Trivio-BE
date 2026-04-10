@@ -10,6 +10,7 @@ import NotificationService from "../notifications/notification.service";
 import bcrypt from "bcrypt";
 import { createMessageDTO } from "../../types/chatbotMessage.types";
 import messageModel from "../../database/models/chatBotMessage.model";
+import redisClient from "../../config/redis";
 
 export default class UsersService {
   private static instance: UsersService;
@@ -447,6 +448,18 @@ export default class UsersService {
 
   async isSavedPost(userId: string, postId: string): Promise<boolean> {
     return await this.repo.isSavedPost(userId, postId);
+  }
+
+  async MarkPostsAsSeen(userId: string, postsID: string[]) {
+    const redisKey = `user:${userId}:seen`;
+    await Promise.all(
+      postsID.map(async (id) => {
+        const post = await PostService.getInstace().getPostbyId(id);
+        if (!post) throw new AppError(`PostId : ${id} Not Found`, 404);
+        await redisClient.set(redisKey, id);
+      }),
+    );
+    await redisClient.expire(redisKey, 604800);
   }
   static getInstance() {
     if (!UsersService.instance) {
