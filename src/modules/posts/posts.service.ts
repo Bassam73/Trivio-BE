@@ -71,12 +71,13 @@ export default class PostService {
   }
 
   async getPublicPosts(userID: string): Promise<object[]> {
-    const posts = await this.repo.getPublicPosts();
+    const res = await axios.get(`${process.env.RECOMMENDER_API_URL}${userID}`);
+    const posts: IPost[] = res.data.data;
     const authorsID: string[] = posts.map((post) => {
       return post.authorID._id as unknown as string;
     });
     const postsID: string[] | null = posts.map((post) => {
-      return post._id?.toString() as string;
+      return post._id as string;
     });
     const reactsObj = await ReactsService.getInstance().getReactionsByPostsIDs(
       userID,
@@ -95,9 +96,9 @@ export default class PostService {
     let response: object[] = posts.map((post) => {
       return {
         post: post,
-        isFollowed: followsSet.has(post.authorID._id.toString()),
-        userReact: reactsMap.has(post._id?.toString() as string)
-          ? reactsMap.get(post._id?.toString() as string)
+        isFollowed: followsSet.has(post.authorID._id as unknown as string),
+        userReact: reactsMap.has(post._id as string)
+          ? reactsMap.get(post._id as string)
           : null,
       };
     });
