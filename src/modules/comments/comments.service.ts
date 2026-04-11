@@ -61,17 +61,22 @@ export default class CommentsService {
 
     await this.postService.incrementCommentsCount(data.postId);
     const post = await this.postService.getPostbyId(data.postId);
-    if (post && post.authorID.toString() !== data.userId) {
-      const sender = await UsersService.getInstance().getMe(data.userId);
-      const notifData: createNotificationDTO = {
-        sender: sender._id as mongoose.Types.ObjectId,
-        receiver: post.authorID as unknown as mongoose.Types.ObjectId,
-        message: `${sender.username} commented on your post`,
-        entityID: comment._id as unknown as mongoose.Types.ObjectId,
-        entityType: EntityType.COMMENT,
-        postId: post._id as unknown as mongoose.Types.ObjectId,
-      };
-      await NotificationService.getInstance().createNotificaiton(notifData);
+    
+    if (post) {
+      const postAuthorId = typeof post.authorID === "object" ? (post.authorID as any)._id : post.authorID;
+      
+      if (postAuthorId.toString() !== data.userId.toString()) {
+        const sender = await UsersService.getInstance().getMe(data.userId);
+        const notifData: createNotificationDTO = {
+          sender: sender._id as mongoose.Types.ObjectId,
+          receiver: postAuthorId as unknown as mongoose.Types.ObjectId,
+          message: `${sender.username} commented on your post`,
+          entityID: comment._id as unknown as mongoose.Types.ObjectId,
+          entityType: EntityType.COMMENT,
+          postId: post._id as unknown as mongoose.Types.ObjectId,
+        };
+        await NotificationService.getInstance().createNotificaiton(notifData);
+      }
     }
 
     return comment;
