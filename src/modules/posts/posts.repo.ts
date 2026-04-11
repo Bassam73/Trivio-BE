@@ -10,7 +10,9 @@ export default class PostRepository {
     return await postModel.create(data);
   }
   async getPublicPosts(): Promise<IPost[]> {
-    return await postModel.find({ type: "public" }).populate("authorID");
+    return await postModel.find({ type: "public" })
+      .populate("authorID")
+      .populate({ path: "sharedFrom", populate: { path: "authorID" } });
   }
 
   async getPublicReels(): Promise<IPost[]> {
@@ -40,7 +42,9 @@ export default class PostRepository {
   }
 
   async getPostById(id: string): Promise<IPost | null> {
-    return await postModel.findById(id).populate("authorID");
+    return await postModel.findById(id)
+      .populate("authorID")
+      .populate({ path: "sharedFrom", populate: { path: "authorID" } });
   }
   async deletePostById(id: string): Promise<IPost | null> {
     return await postModel.findByIdAndDelete(id);
@@ -62,6 +66,13 @@ export default class PostRepository {
     return await postModel.findByIdAndUpdate(
       id,
       { $inc: { commentsCount: -count } },
+      { new: true },
+    );
+  }
+  async incrementSharesCount(id: string): Promise<IPost | null> {
+    return await postModel.findByIdAndUpdate(
+      id,
+      { $inc: { sharesCount: 1 } },
       { new: true },
     );
   }
@@ -90,7 +101,8 @@ export default class PostRepository {
       postModel
         .find({ location: "group", groupID: groupId })
         .populate("groupID")
-        .populate("authorID"),
+        .populate("authorID")
+        .populate({ path: "sharedFrom", populate: { path: "authorID" } }),
       searchQuery,
     )
       .filter()
@@ -109,7 +121,8 @@ export default class PostRepository {
   async getPostsByGroupId(groupId: string): Promise<IPost[]> {
     return await postModel
       .find({ location: "group", groupID: groupId })
-      .populate("authorID");
+      .populate("authorID")
+      .populate({ path: "sharedFrom", populate: { path: "authorID" } });
   }
 
   async findPostsByIds(postIds: string[]) {
@@ -117,7 +130,8 @@ export default class PostRepository {
       .find({
         _id: { $in: postIds },
       })
-      .populate("authorID");
+      .populate("authorID")
+      .populate({ path: "sharedFrom", populate: { path: "authorID" } });
   }
   async findPostsByUserId(
     userId: string,
@@ -143,10 +157,14 @@ export default class PostRepository {
       .exec();
   }
   async getPostByID(id: string): Promise<IPost | null> {
-    return await postModel.findById(id).populate("authorID");
+    return await postModel.findById(id)
+      .populate("authorID")
+      .populate({ path: "sharedFrom", populate: { path: "authorID" } });
   }
   async getUserPostsByID(userID: string): Promise<IPost[]> {
-    return await postModel.find({ authorID: userID });
+    return await postModel.find({ authorID: userID })
+      .populate("authorID")
+      .populate({ path: "sharedFrom", populate: { path: "authorID" } });
   }
   static getInstace() {
     if (!PostRepository.instance) {

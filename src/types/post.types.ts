@@ -35,6 +35,7 @@ export interface IPost {
   tags?: [string];
   shownTags?: boolean;
   commentsCount: number;
+  sharesCount?: number;
   tags_id?: [number];
   reactionCounts: {
     like: number;

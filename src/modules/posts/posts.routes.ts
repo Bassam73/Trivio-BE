@@ -5,6 +5,7 @@ import {
   createPostVal,
   paramsIdVal,
   updatePostByIdVal,
+  sharePostVal,
 } from "./posts.validation";
 import { uploadMedia } from "../../core/utils/upload";
 import {
@@ -15,6 +16,7 @@ import {
   getPublicPostsById,
   getReels,
   updatePostById,
+  sharePost,
   getPostComments,
   createPostReaction,
   getPostReactions,
@@ -61,6 +63,16 @@ postsRouter
     updatePostById,
   )
   .delete(protectedRoutes, validator.params(paramsIdVal), deletePostById);
+
+postsRouter
+  .route("/:id/share")
+  .post(
+    protectedRoutes,
+    authorizePostAccess,
+    validator.params(paramsIdVal),
+    validator.body(sharePostVal),
+    sharePost,
+  );
 
 postsRouter
   .route("/:id/reacts")

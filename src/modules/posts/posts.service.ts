@@ -22,6 +22,8 @@ import ReactsRepository from "../reacts/reacts.repo";
 import FollowService from "../follow/follow.service";
 import ReactsService from "../reacts/reacts.service";
 import UsersService from "../users/users.service";
+import { EntityType } from "../../types/notification.types";
+import NotificationService from "../notifications/notification.service";
 
 export default class PostService {
   private static instance: PostService;
@@ -140,6 +142,65 @@ export default class PostService {
 
   async getPublicReels(): Promise<IPost[]> {
     return await this.repo.getPublicReels();
+  async sharePost(userId: string, originalPostId: string, payload: any = {}): Promise<IPost> {
+    const originalPost = await this.repo.getPostById(originalPostId);
+    if (!originalPost) throw new AppError("original post not found", 404);
+    if (originalPost.type === "private") {
+      throw new AppError("Private posts cannot be shared", 403);
+    }
+    if (!payload.type) {
+      throw new AppError("Post type is required", 400);
+    }
+
+    const rootPostId = originalPost.sharedFrom ? originalPost.sharedFrom.toString() : originalPostId;
+
+    const data: createPostDTO = {
+      authorID: new mongoose.Types.ObjectId(userId),
+      sharedFrom: new mongoose.Types.ObjectId(rootPostId),
+      type: payload.type,
+      caption: payload.caption || "",
+      location: "profile",
+    };
+
+    if (data.caption) {
+      const mentions: IUser[] | null = await getMentionedUsers(data.caption);
+      if (mentions) {
+        data.mentions = mentions;
+      }
+    }
+
+    const post = await this.repo.createPost(data);
+
+    if (data.caption) {
+      filterQueue.add("check-filter", {
+        id: post._id as string,
+        caption: data.caption,
+        filterType: FilterType.post,
+      });
+    }
+
+    await this.repo.incrementSharesCount(originalPostId);
+    if (rootPostId !== originalPostId) {
+      await this.repo.incrementSharesCount(rootPostId);
+    }
+
+    await UsersService.getInstance().incrementUsersPostsCount(userId);
+
+   
+    const originalAuthorId = typeof originalPost.authorID === "object" ? (originalPost.authorID as any)._id : originalPost.authorID;
+    
+    if (originalAuthorId.toString() !== userId) {
+      await NotificationService.getInstance().createNotificaiton({
+        sender: new mongoose.Types.ObjectId(userId),
+        receiver: new mongoose.Types.ObjectId(originalAuthorId.toString()),
+        entityID: post._id as unknown as mongoose.Types.ObjectId,
+        entityType: EntityType.POST,
+        message: "shared your post",
+        postId: post._id as unknown as mongoose.Types.ObjectId,
+      });
+    }
+
+    return post;
   }
 
   async deletePostById(postId: string, userId: mongoose.Types.ObjectId) {
