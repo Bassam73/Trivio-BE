@@ -32,8 +32,7 @@ const filterProcessor = async (job: Job<FilterJobData>): Promise<void> => {
     console.log(
       `[Filter Worker] Model returned: "${modelResult}" for ${filterType}: ${id}`,
     );
-
-    if (modelResult.includes("safe")) {
+    if (modelResult.includes("Safe")) {
       result = ToxicityFlags.safe;
     } else if (modelResult.includes("BLOCKED")) {
       result = ToxicityFlags.blocked;

@@ -375,7 +375,6 @@ export default class GroupService {
 
     await this.repo.removeMember(dto.groupId, dto.targetUserId);
     await this.repo.updateMemberCount(dto.groupId, -1);
-    await this.repo.updateMemberCount(dto.groupId, -1);
     if (targetMember.role === "admin") {
       await group.updateOne({ $inc: { admins: -1 } });
     } else if (targetMember.role === "moderator") {
