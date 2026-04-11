@@ -61,6 +61,10 @@ const schema: Schema<IPost> = new Schema<IPost>(
       type: Number,
       default: 0,
     },
+    sharesCount: {
+      type: Number,
+      default: 0,
+    },
     shownTags: {
       type: Boolean,
       default: false,

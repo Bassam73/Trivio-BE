@@ -27,4 +27,10 @@ const updatePostByIdVal = Joi.object({
   }
   return value;
 });
-export { createPostVal, paramsIdVal, updatePostByIdVal };
+
+const sharePostVal = Joi.object({
+  caption: Joi.string().allow("", null).optional(),
+  type: Joi.string().valid(...Object.values(PostType)).required(),
+}).required();
+
+export { createPostVal, paramsIdVal, updatePostByIdVal, sharePostVal };

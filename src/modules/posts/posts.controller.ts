@@ -66,6 +66,18 @@ const updatePostById = catchError(
   },
 );
 
+const sharePost = catchError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const originalPostId = req.params.id;
+    const userId = req.user?.id as unknown as string;
+    
+    if (!userId) throw new AppError("User not authenticated", 401);
+
+    const post = await service.sharePost(userId, originalPostId, req.body);
+    res.status(201).json({ status: "success", data: { post } });
+  },
+);
+
 const createComment = catchError(
   async (req: Request, res: Response, next: NextFunction) => {
     const data: createCommentDTO = {
@@ -119,6 +131,7 @@ export {
   getPublicPostsById,
   deletePostById,
   updatePostById,
+  sharePost,
   createComment,
   getPostComments,
   createPostReaction,
