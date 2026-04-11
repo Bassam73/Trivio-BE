@@ -143,7 +143,11 @@ export default class PostService {
   async getPublicReels(): Promise<IPost[]> {
     return await this.repo.getPublicReels();
   }
-  async sharePost(userId: string, originalPostId: string, payload: any = {}): Promise<IPost> {
+  async sharePost(
+    userId: string,
+    originalPostId: string,
+    payload: any = {},
+  ): Promise<IPost> {
     const originalPost = await this.repo.getPostById(originalPostId);
     if (!originalPost) throw new AppError("original post not found", 404);
     if (originalPost.type === "private") {
@@ -153,7 +157,9 @@ export default class PostService {
       throw new AppError("Post type is required", 400);
     }
 
-    const rootPostId = originalPost.sharedFrom ? originalPost.sharedFrom.toString() : originalPostId;
+    const rootPostId = originalPost.sharedFrom
+      ? originalPost.sharedFrom.toString()
+      : originalPostId;
 
     const data: createPostDTO = {
       authorID: new mongoose.Types.ObjectId(userId),
@@ -187,9 +193,11 @@ export default class PostService {
 
     await UsersService.getInstance().incrementUsersPostsCount(userId);
 
-   
-    const originalAuthorId = typeof originalPost.authorID === "object" ? (originalPost.authorID as any)._id : originalPost.authorID;
-    
+    const originalAuthorId =
+      typeof originalPost.authorID === "object"
+        ? (originalPost.authorID as any)._id
+        : originalPost.authorID;
+
     if (originalAuthorId.toString() !== userId) {
       await NotificationService.getInstance().createNotificaiton({
         sender: new mongoose.Types.ObjectId(userId),
@@ -221,7 +229,8 @@ export default class PostService {
   async updatePostById(data: updatePostDTO): Promise<IPost | null> {
     const post = await this.repo.getPostById(data.postID.toString());
     if (!post) throw new AppError("post not found", 404);
-    if (post.authorID.toString() !== data.userID.toString()) {
+    console.log(post.authorID.toString(), data.userID.toString());
+    if (post.authorID._id.toString() != data.userID.toString()) {
       throw new AppError("you are not authorized to update this post", 403);
     }
 

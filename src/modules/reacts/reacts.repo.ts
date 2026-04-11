@@ -51,7 +51,7 @@ export default class ReactsRepository {
     const apiFeatures = new ApiFeatures<IReaction>(
       reactionModel
         .find({ modelId: modelId })
-        .populate("userId", "username profilePicture"),
+        .populate("userId", "username avatar"),
       searchQuery,
     )
       .filter()
