@@ -142,6 +142,7 @@ export default class PostService {
 
   async getPublicReels(): Promise<IPost[]> {
     return await this.repo.getPublicReels();
+  }
   async sharePost(userId: string, originalPostId: string, payload: any = {}): Promise<IPost> {
     const originalPost = await this.repo.getPostById(originalPostId);
     if (!originalPost) throw new AppError("original post not found", 404);
