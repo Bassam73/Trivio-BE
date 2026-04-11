@@ -58,6 +58,9 @@ export default class NotificationService {
       entityType: notification.entityType,
       entityId: notification.entityID.toString(),
       postId: notification.postId?.toString(),
+      ...(notification.entityType === EntityType.FOLLOW
+        ? { senderId: notification.sender.toString() }
+        : {}),
     };
     await FirebaseService.getInstance().sendToUser(
       notification.receiver.toString(),

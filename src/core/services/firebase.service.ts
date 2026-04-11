@@ -8,6 +8,7 @@ export interface PushPayload {
   entityType: EntityType;
   entityId: string;
   postId?: string;
+  senderId?: string; // populated for FOLLOW notifications
 }
 
 export default class FirebaseService {
@@ -27,7 +28,8 @@ export default class FirebaseService {
       data: {
         entityType: payload.entityType,
         entityId: payload.entityId,
-        ...(payload.postId ? { postId: payload.postId } : {}),
+        ...(payload.postId   ? { postId:   payload.postId   } : {}),
+        ...(payload.senderId ? { senderId: payload.senderId } : {}),
       },
       android: {
         priority: "high",

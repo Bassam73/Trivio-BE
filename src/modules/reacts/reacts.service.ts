@@ -63,21 +63,21 @@ export default class ReactsService {
 
     if (!entity) return;
 
+    if (!isPost) return;
+
     const sender = await UsersService.getInstance().getMe(data.userId);
+
+    const rawReceiverId = ((entity as any).authorID as any)?._id
+      ?? (entity as any).authorID;
+    if (rawReceiverId?.toString() === data.userId) return;
 
     const notifData: createNotificationDTO = {
       sender: sender._id as mongoose.Types.ObjectId,
-      receiver: (isPost
-        ? (entity as any).authorID
-        : (entity as any).userId) as mongoose.Types.ObjectId,
-      message: isPost
-        ? `${sender.username} reacted to your post`
-        : `${sender.username} reacted to your comment`,
+      receiver: rawReceiverId as mongoose.Types.ObjectId,
+      message: `${sender.username} reacted to your post`,
       entityID: entity._id as unknown as mongoose.Types.ObjectId,
       entityType: EntityType.REACT,
-      postId: isPost
-        ? (entity._id as unknown as mongoose.Types.ObjectId)
-        : ((entity as any).postId as mongoose.Types.ObjectId),
+      postId: entity._id as unknown as mongoose.Types.ObjectId,
     };
 
     await NotificationService.getInstance().createNotificaiton(notifData);
