@@ -4,13 +4,29 @@ export enum PostType {
   public = "public",
   private = "private",
 }
+export enum MediaType {
+  image = "image",
+  reel = "reel",
+}
+
+export interface IMediaItem {
+  url: string;
+  mediaType: MediaType;
+}
+
+export interface IReel {
+  url: string;
+  mediaType: MediaType;
+  author: IUser;
+}
+
 export interface IPost {
   _id?: string;
   caption?: string;
   authorID: mongoose.Types.ObjectId;
   type: string; //public or private
   mentions?: [{ id: mongoose.Types.ObjectId; username: string }];
-  media?: [string];
+  media?: IMediaItem[];
   sharedFrom?: mongoose.Types.ObjectId;
   location: string; // Profile Or group
   groupID?: mongoose.Types.ObjectId;
@@ -39,7 +55,7 @@ export interface createPostDTO {
   authorID?: mongoose.Types.ObjectId;
   type?: string; //public or private
   mentions?: IUser[];
-  media?: string[];
+  media?: IMediaItem[];
   sharedFrom?: mongoose.Types.ObjectId;
   location?: string; // Profile Or group
   groupID?: mongoose.Types.ObjectId;

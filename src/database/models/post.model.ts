@@ -28,9 +28,19 @@ const schema: Schema<IPost> = new Schema<IPost>(
         },
       },
     ],
-    media: {
-      type: [String],
-    },
+    media: [
+      {
+        url: {
+          type: String,
+          required: true,
+        },
+        mediaType: {
+          type: String,
+          enum: ["image","reel"],
+          required: true,
+        },
+      },
+    ],
     sharedFrom: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "post",

@@ -39,7 +39,14 @@ export const memberActionVal = Joi.object({
 
 export const createGroupPostVal = Joi.object({
   caption: Joi.string().allow("", null),
-  media: Joi.array().items(Joi.string()).optional(),
+  media: Joi.array()
+    .items(
+      Joi.object({
+        url: Joi.string().uri().required(),
+        mediaType: Joi.string().valid("image", "reel").required(),
+      }),
+    )
+    .optional(),
   authorID: Joi.string().required(),
   flagged: Joi.boolean().optional(),
   mentions: Joi.array().optional(),

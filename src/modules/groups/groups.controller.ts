@@ -9,7 +9,11 @@ import {
   updateGroupDTO,
 } from "../../types/group.types";
 import { checkGroupRole } from "../../core/middlewares/role.middleware";
-import { createPostDTO, updatePostDTO } from "../../types/post.types";
+import {
+  createPostDTO,
+  MediaType,
+  updatePostDTO,
+} from "../../types/post.types";
 
 import { uploadToCloudinary } from "../../core/utils/upload";
 
@@ -251,7 +255,13 @@ export const createGroupPost = catchError(
       );
 
       const uploadResults = await Promise.all(uploadPromises);
-      data.media = uploadResults.map((result) => (result as any).secure_url);
+      data.media = uploadResults.map((result) => ({
+        url: (result as any).secure_url,
+        mediaType:
+          (result as any).resource_type === "video"
+            ? MediaType.reel
+            : MediaType.image,
+      }));
     }
 
     const post = await service.createGroupPost(data);

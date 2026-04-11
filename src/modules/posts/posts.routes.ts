@@ -13,6 +13,7 @@ import {
   deletePostById,
   getPublicPosts,
   getPublicPostsById,
+  getReels,
   updatePostById,
   getPostComments,
   createPostReaction,
@@ -34,6 +35,8 @@ postsRouter
     uploadMedia.fields([{ name: "media", maxCount: 10 }]),
     createPost,
   );
+
+postsRouter.route("/reels").get(protectedRoutes, getReels);
 postsRouter
   .route("/:id/comments")
   .post(

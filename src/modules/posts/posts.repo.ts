@@ -12,6 +12,33 @@ export default class PostRepository {
   async getPublicPosts(): Promise<IPost[]> {
     return await postModel.find({ type: "public" }).populate("authorID");
   }
+
+  async getPublicReels(): Promise<IPost[]> {
+    return await postModel.aggregate([
+      { $match: { type: "public", "media.mediaType": "reel" } },
+      {
+        $addFields: {
+          media: {
+            $filter: {
+              input: "$media",
+              as: "m",
+              cond: { $eq: ["$$m.mediaType", "reel"] },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "authorID",
+          foreignField: "_id",
+          as: "authorID",
+        },
+      },
+      { $unwind: "$authorID" },
+    ]);
+  }
+
   async getPostById(id: string): Promise<IPost | null> {
     return await postModel.findById(id).populate("authorID");
   }

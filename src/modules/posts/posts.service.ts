@@ -137,6 +137,11 @@ export default class PostService {
   async getPostbyId(id: string): Promise<IPost | null> {
     return await this.repo.getPostByID(id);
   }
+
+  async getPublicReels(): Promise<IPost[]> {
+    return await this.repo.getPublicReels();
+  }
+
   async deletePostById(postId: string, userId: mongoose.Types.ObjectId) {
     const post = await this.repo.getPostById(postId);
     if (!post) throw new AppError("post not found", 404);

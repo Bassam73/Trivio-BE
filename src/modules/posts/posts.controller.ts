@@ -1,7 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import catchError from "../../core/middlewares/catchError";
 import PostService from "./posts.service";
-import { createPostDTO, IPost, updatePostDTO } from "../../types/post.types";
+import {
+  createPostDTO,
+  IPost,
+  MediaType,
+  updatePostDTO,
+} from "../../types/post.types";
 import mongoose from "mongoose";
 import { createCommentDTO } from "../../types/comment.types";
 import AppError from "../../core/utils/AppError";
@@ -28,7 +33,13 @@ const createPost = catchError(
       );
 
       const uploadResults = await Promise.all(uploadPromises);
-      data.media = uploadResults.map((result) => (result as any).secure_url);
+      data.media = uploadResults.map((result) => ({
+        url: (result as any).secure_url,
+        mediaType:
+          (result as any).resource_type === "video"
+            ? MediaType.reel
+            : MediaType.image,
+      }));
     }
 
     data.authorID = req.user?.id;
@@ -44,6 +55,13 @@ const getPublicPostsById = catchError(
       req.user?.id as unknown as string,
     );
     res.status(200).json({ status: "success", data });
+  },
+);
+
+const getReels = catchError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const reels = await service.getPublicReels();
+    res.status(200).json({ status: "success", data: { reels } });
   },
 );
 
@@ -116,6 +134,7 @@ const getPostReactions = catchError(
 export {
   createPost,
   getPublicPosts,
+  getReels,
   getPublicPostsById,
   deletePostById,
   updatePostById,
