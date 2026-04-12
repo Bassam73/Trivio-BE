@@ -7,7 +7,7 @@ export default class PostRepository {
   private static instance: PostRepository;
   constructor() {}
   async createPost(data: createPostDTO): Promise<IPost> {
-    return await postModel.create(data);
+    return (await postModel.create(data)).populate("authorID")
   }
   async getPublicPosts(): Promise<IPost[]> {
     return await postModel.find({ type: "public" })

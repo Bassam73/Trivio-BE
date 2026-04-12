@@ -66,7 +66,7 @@ export default class PostService {
     console.timeEnd("DB Save");
     console.timeEnd("Total Logic Time");
     console.log(data.authorID);
-    const authorID = post.authorID.toString();
+    const authorID = post.authorID._id.toString();
 
     await UsersService.getInstance().incrementUsersPostsCount(authorID);
     return post;
