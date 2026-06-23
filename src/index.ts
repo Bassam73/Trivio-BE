@@ -1,6 +1,7 @@
 import env from "dotenv";
 env.config();
 import express, { NextFunction, Request, Response } from "express";
+import { createServer } from "http";
 import dbConnection from "./config/dbConnection";
 import AppError from "./core/utils/AppError";
 import bootstrap from "./modules/index.router";
@@ -11,6 +12,8 @@ import { setupAllWorkers } from "./jobs";
 import path from "path";
 import "./config/firebase"; // initialize Firebase Admin SDK on startup
 import redisClient from "./config/redis";
+import { initChatGateway } from "./modules/chat/chat.gateway";
+
 const app = express();
 dbConnection();
 
@@ -37,6 +40,11 @@ app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
 });
 
 const PORT = Number(process.env.PORT) || 3000;
-app.listen(PORT, () => {
+
+// Wrap in http.Server so Socket.IO can share the same port
+const httpServer = createServer(app);
+initChatGateway(httpServer);
+
+httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

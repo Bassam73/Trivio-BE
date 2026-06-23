@@ -5,6 +5,7 @@ export enum EntityType {
   COMMENT = "COMMENT",
   FOLLOW = "FOLLOW",
   POST = "POST",
+  MESSAGE = "MESSAGE",
 }
 export default interface INotification extends Document {
   _id: mongoose.Types.ObjectId;
