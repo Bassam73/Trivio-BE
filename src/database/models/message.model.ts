@@ -30,5 +30,5 @@ const schema: Schema<IMessage> = new Schema<IMessage>(
 /** Efficient history fetch: conversation + newest-first */
 schema.index({ conversation: 1, createdAt: -1 });
 
-const messageModel = mongoose.model<IMessage>("message", schema);
+const messageModel = mongoose.model<IMessage>("chatMessage", schema);
 export default messageModel;

@@ -11,20 +11,26 @@ const schema: Schema<IConversation> = new Schema<IConversation>(
       },
       required: true,
     },
+    /**
+     * Deterministic unique key: sorted participant IDs joined by "_".
+     * e.g. "aaa111_bbb222" — always the same regardless of who initiates.
+     * This is the correct way to enforce one conversation per pair in MongoDB,
+     * because a unique index on an array field is a multikey index and would
+     * incorrectly prevent any user from appearing in more than one conversation.
+     */
+    conversationKey: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     lastMessage: {
       type: Schema.Types.ObjectId,
-      ref: "message",
+      ref: "chatMessage",
       required: false,
     },
   },
   { timestamps: true }
 );
-
-/**
- * Unique compound index on sorted participants ensures only ONE conversation
- * exists per user pair, regardless of who initiates first.
- */
-schema.index({ participants: 1 }, { unique: true });
 
 const conversationModel = mongoose.model<IConversation>("conversation", schema);
 export default conversationModel;

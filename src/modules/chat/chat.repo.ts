@@ -9,27 +9,32 @@ export default class ChatRepository {
   // ─── Conversations ─────────────────────────────────────────────────────────
 
   /**
-   * Finds an existing 1-to-1 conversation between two users, or creates one.
-   * Participants are sorted before the query to guarantee the unique index fires.
+   * Builds the deterministic unique key for a user pair.
+   * Sorting guarantees the same key regardless of who initiates.
+   * e.g. "aaa111_bbb222" (always the smaller ID first)
    */
-  async findOrCreateConversation(
-    userAId: string,
-    userBId: string
-  ) {
-    // Sort to match unique index
+  private buildConversationKey(userAId: string, userBId: string): string {
+    return [userAId, userBId].sort().join("_");
+  }
+
+  /**
+   * Finds an existing 1-to-1 conversation between two users, or creates one.
+   * Uses conversationKey (a sorted string of both IDs) as the unique dedup field.
+   */
+  async findOrCreateConversation(userAId: string, userBId: string) {
+    const conversationKey = this.buildConversationKey(userAId, userBId);
+
+    const existing = await conversationModel.findOne({ conversationKey });
+    if (existing) return { conversation: existing, created: false };
+
     const sorted = [
       new mongoose.Types.ObjectId(userAId),
       new mongoose.Types.ObjectId(userBId),
     ].sort((a, b) => a.toString().localeCompare(b.toString()));
 
-    const existing = await conversationModel.findOne({
-      participants: { $all: sorted },
-    });
-
-    if (existing) return { conversation: existing, created: false };
-
     const conversation = await conversationModel.create({
       participants: sorted,
+      conversationKey,
     });
 
     return { conversation, created: true };
