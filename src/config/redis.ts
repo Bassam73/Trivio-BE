@@ -11,6 +11,8 @@ redisClient.on("connect", () => {
   console.log("✅ Redis Connected Successfully!");
 });
 
-
+redisClient.on("error", (err) => {
+  console.error("❌ Redis Connection/Authentication Error:", err);
+});
 
 export default redisClient;

@@ -144,14 +144,14 @@ describe("GroupService", () => {
       const mockResult = { data: [{ name: "g1" }], page: 1 };
       repoMock.getGroups.mockResolvedValue(mockResult as any);
 
-      const result = await service.getGroups({});
+      const result = await service.getGroups({}, "user123");
       expect(result).toEqual(mockResult);
     });
 
     it("should throw 404 if no groups found", async () => {
        // Assuming repo returns empty list or service handles empty list
        repoMock.getGroups.mockResolvedValue({ data: [], page: 1 } as any);
-       await expect(service.getGroups({})).rejects.toThrow("no groups found");
+       await expect(service.getGroups({}, "user123")).rejects.toThrow("no groups found");
     });
   });
 

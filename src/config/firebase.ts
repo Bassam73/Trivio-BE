@@ -3,18 +3,36 @@ import path from "path";
 
 // Initialize once — guard prevents double-init (e.g. in test environments)
 if (!admin.apps.length) {
-  const serviceAccountPath = path.resolve(
-    process.env.FIREBASE_SERVICE_ACCOUNT_PATH as string,
-  );
+  let serviceAccount: any;
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const serviceAccount = require(serviceAccountPath);
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } catch (error) {
+      console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT env variable:", error);
+    }
+  }
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+  if (!serviceAccount && process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
+    try {
+      const serviceAccountPath = path.resolve(
+        process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+      );
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      serviceAccount = require(serviceAccountPath);
+    } catch (error) {
+      console.error("❌ Failed to load service account key from path:", error);
+    }
+  }
 
-  console.log("✅ Firebase Admin SDK initialized");
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    console.log("✅ Firebase Admin SDK initialized");
+  } else {
+    console.warn("⚠️ Firebase Admin SDK was NOT initialized: No credentials provided.");
+  }
 }
 
 export default admin;

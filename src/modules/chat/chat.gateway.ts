@@ -14,8 +14,15 @@ const userRoom = (userId: string) => `user:${userId}`;
 // ─── Gateway Init ─────────────────────────────────────────────────────────────
 
 export function initChatGateway(httpServer: HttpServer): Server {
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",")
+    : "*";
+
   const io = new Server(httpServer, {
-    cors: { origin: "*" },
+    cors: {
+      origin: allowedOrigins,
+      methods: ["GET", "POST"],
+    },
     path: "/socket.io",
   });
 

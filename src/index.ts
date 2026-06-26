@@ -39,7 +39,7 @@ app.use((err: AppError, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 5000;
 
 // Wrap in http.Server so Socket.IO can share the same port
 const httpServer = createServer(app);
